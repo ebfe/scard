@@ -1,4 +1,4 @@
-package example_test
+package scard_test
 
 import (
 	"fmt"
