@@ -346,6 +346,33 @@ func (card *Card) Control(ctrl uint32, cmd []byte) ([]byte, error) {
 
 	return rsp, nil
 }
-// TODO: SCardFreeMemory
-// TODO: SCardGetAttrib
-// TODO: SCardSetAttrib
+
+// wraps SCardGetAttrib
+func (card *Card) GetAttrib(id uint32) ([]byte, error) {
+	var needed C.DWORD
+
+	r := C.SCardGetAttrib(card.handle, C.DWORD(id), nil, &needed)
+	if r != C.SCARD_S_SUCCESS {
+		return nil, newError(r)
+	}
+
+	var attrib = make([]byte, needed)
+
+	r = C.SCardGetAttrib(card.handle, C.DWORD(id), (*C.BYTE)(&attrib[0]), &needed)
+	if r != C.SCARD_S_SUCCESS {
+		return nil, newError(r)
+	}
+
+	return attrib[0:needed], nil
+}
+
+// wraps SCardSetAttrib
+func (card *Card) SetAttrib(id uint32, data []byte) error {
+	r := C.SCardSetAttrib(card.handle, C.DWORD(id), (*C.BYTE)(&data[0]), C.DWORD(len(data)))
+	if r != C.SCARD_S_SUCCESS {
+		return newError(r)
+	}
+	return nil
+}
+
+// SCardFreeMemory is not needed. We (hopefuly) never return buffers allocated by libpcsclite
