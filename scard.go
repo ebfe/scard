@@ -302,7 +302,23 @@ func (card *Card) Transmit(cmd []byte) ([]byte, error) {
 	return rsp, nil
 }
 
-// TODO: SCardControl
+// wraps SCardControl
+func (card *Card) Control(ctrl uint32, cmd []byte) ([]byte, error) {
+	var recv [C.MAX_BUFFER_SIZE_EXTENDED]byte
+	var recvlen C.DWORD
+
+	r := C.SCardControl(card.handle, C.DWORD(ctrl),
+		(C.LPCVOID)(unsafe.Pointer(&cmd[0])), C.DWORD(len(cmd)),
+		(C.LPVOID)(unsafe.Pointer(&recv[0])), C.DWORD(len(recv)), &recvlen)
+	if r != C.SCARD_S_SUCCESS {
+		return nil, newError(r)
+	}
+
+	rsp := make([]byte, recvlen)
+	copy(rsp, recv[0:recvlen])
+
+	return rsp, nil
+}
 // TODO: SCardListReaderGroups
 // TODO: SCardFreeMemory
 // TODO: SCardGetAttrib
