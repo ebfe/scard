@@ -165,6 +165,33 @@ func (ctx *Context) ListReaders() ([]string, error) {
 	return readers, nil
 }
 
+// wraps SCardListReaderGroups
+func (ctx *Context) ListReaderGroups() ([]string, error) {
+	var needed C.DWORD
+
+	r := C.SCardListReaderGroups(ctx.ctx, nil, &needed)
+	if r != C.SCARD_S_SUCCESS {
+		return nil, newError(r)
+	}
+
+	data := make([]byte, needed)
+	cdata := (*C.char)(unsafe.Pointer(&data[0]))
+
+	r = C.SCardListReaderGroups(ctx.ctx, cdata, &needed)
+	if r != C.SCARD_S_SUCCESS {
+		return nil, newError(r)
+	}
+
+	var groups []string
+	for _, b := range bytes.Split(data, []byte{0}) {
+		if len(b) > 0 {
+			groups = append(groups, string(b))
+		}
+	}
+
+	return groups, nil
+}
+
 // wraps SCardGetStatusChange
 func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout Timeout) error {
 
@@ -319,7 +346,6 @@ func (card *Card) Control(ctrl uint32, cmd []byte) ([]byte, error) {
 
 	return rsp, nil
 }
-// TODO: SCardListReaderGroups
 // TODO: SCardFreeMemory
 // TODO: SCardGetAttrib
 // TODO: SCardSetAttrib
