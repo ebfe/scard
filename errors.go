@@ -7,7 +7,7 @@ import "C"
 type scardError uint
 
 func (e *scardError) Error() string {
-	return C.GoString(C.pcsc_stringify_error(C.LONG(*e)))
+	return "scard: " + C.GoString(C.pcsc_stringify_error(C.LONG(*e)))
 }
 
 func newError(code C.LONG) *scardError {
