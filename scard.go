@@ -333,10 +333,17 @@ func (card *Card) Transmit(cmd []byte) ([]byte, error) {
 func (card *Card) Control(ctrl uint32, cmd []byte) ([]byte, error) {
 	var recv [C.MAX_BUFFER_SIZE_EXTENDED]byte
 	var recvlen C.DWORD
+	var r C.LONG
 
-	r := C.SCardControl(card.handle, C.DWORD(ctrl),
-		(C.LPCVOID)(unsafe.Pointer(&cmd[0])), C.DWORD(len(cmd)),
-		(C.LPVOID)(unsafe.Pointer(&recv[0])), C.DWORD(len(recv)), &recvlen)
+	if len(cmd) == 0 {
+		r = C.SCardControl(card.handle, C.DWORD(ctrl),
+			(C.LPCVOID)(nil), 0,
+			(C.LPVOID)(unsafe.Pointer(&recv[0])), C.DWORD(len(recv)), &recvlen)
+	} else {
+		r = C.SCardControl(card.handle, C.DWORD(ctrl),
+			(C.LPCVOID)(unsafe.Pointer(&cmd[0])), C.DWORD(len(cmd)),
+			(C.LPVOID)(unsafe.Pointer(&recv[0])), C.DWORD(len(recv)), &recvlen)
+	}
 	if r != C.SCARD_S_SUCCESS {
 		return nil, newError(r)
 	}
