@@ -332,7 +332,7 @@ func (card *Card) Transmit(cmd []byte) ([]byte, error) {
 
 // wraps SCardControl
 func (card *Card) Control(ctrl uint32, cmd []byte) ([]byte, error) {
-	var recv [C.MAX_BUFFER_SIZE_EXTENDED]byte
+	var recv [0xffff]byte
 	var recvlen C.DWORD
 	var r C.LONG
 
