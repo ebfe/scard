@@ -301,24 +301,25 @@ func (card *Card) Status() (*CardStatus, error) {
 
 // wraps SCardTransmit
 func (card *Card) Transmit(cmd []byte) ([]byte, error) {
-	var sendpci *C.SCARD_IO_REQUEST
+	var sendpci C.SCARD_IO_REQUEST
 	var recvpci C.SCARD_IO_REQUEST
 
 	switch card.activeProtocol {
 	case PROTOCOL_T0:
-		sendpci = &C.g_rgSCardT0Pci
+		sendpci.dwProtocol = C.SCARD_PROTOCOL_T0
 	case PROTOCOL_T1:
-		sendpci = &C.g_rgSCardT1Pci
+		sendpci.dwProtocol = C.SCARD_PROTOCOL_T1
 	case PROTOCOL_RAW:
-		sendpci = &C.g_rgSCardRawPci
+		sendpci.dwProtocol = C.SCARD_PROTOCOL_RAW
 	default:
 		panic("unknown protocol")
 	}
+	sendpci.cbPciLength = C.sizeof_SCARD_IO_REQUEST
 
 	var recv [C.MAX_BUFFER_SIZE_EXTENDED]byte
 	var recvlen C.DWORD = C.DWORD(len(recv))
 
-	r := C.SCardTransmit(card.handle, sendpci, (*C.BYTE)(&cmd[0]), C.DWORD(len(cmd)), &recvpci, (*C.BYTE)(&recv[0]), &recvlen)
+	r := C.SCardTransmit(card.handle, &sendpci, (*C.BYTE)(&cmd[0]), C.DWORD(len(cmd)), &recvpci, (*C.BYTE)(&recv[0]), &recvlen)
 	if r != C.SCARD_S_SUCCESS {
 		return nil, newError(r)
 	}
