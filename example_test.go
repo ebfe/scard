@@ -11,17 +11,26 @@ func die(err error) {
 	os.Exit(1)
 }
 
-func waitUntilCardPresent(ctx *scard.Context, reader string) error {
-	rs := []scard.ReaderState{{Reader: reader, CurrentState: scard.STATE_UNAWARE}}
+func waitUntilCardPresent(ctx *scard.Context, readers []string) (int, error) {
+	rs := make([]scard.ReaderState, len(readers))
+	for i := range rs {
+		rs[i].Reader = readers[i]
+		rs[i].CurrentState = scard.STATE_UNAWARE
+	}
 
-	for rs[0].EventState&scard.STATE_PRESENT == 0 {
+	for {
+		for i := range rs {
+			if rs[i].EventState & scard.STATE_PRESENT != 0 {
+				return i, nil
+			}
+		}
 		err := ctx.GetStatusChange(rs, scard.INFINITE)
 		if err != nil {
-			return err
+			return -1, err
 		}
 	}
 
-	return nil
+	panic("unreachable")
 }
 
 func Example() {
@@ -46,15 +55,15 @@ func Example() {
 
 	if len(readers) > 0 {
 
-		fmt.Println("Waiting for a Card in readers[0]")
-		err := waitUntilCardPresent(ctx, readers[0])
+		fmt.Println("Waiting for a Card")
+		index, err := waitUntilCardPresent(ctx, readers)
 		if err != nil {
 			die(err)
 		}
 
 		// Connect to card
-		fmt.Println("Connecting to card")
-		card, err := ctx.Connect(readers[0], scard.SHARE_EXCLUSIVE, scard.PROTOCOL_ANY)
+		fmt.Println("Connecting to card in ", readers[index])
+		card, err := ctx.Connect(readers[index], scard.SHARE_EXCLUSIVE, scard.PROTOCOL_ANY)
 		if err != nil {
 			die(err)
 		}
