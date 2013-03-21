@@ -4,7 +4,7 @@ package scard
 // #include <winscard.h>
 import "C"
 
-type scardError uint
+type scardError int32
 
 func (e *scardError) Error() string {
 	return "scard: " + C.GoString(C.pcsc_stringify_error(C.LONG(*e)))
