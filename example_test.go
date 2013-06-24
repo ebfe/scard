@@ -2,8 +2,8 @@ package scard_test
 
 import (
 	"fmt"
-	"os"
 	"github.com/ebfe/go.pcsclite/scard"
+	"os"
 )
 
 func die(err error) {
@@ -20,7 +20,7 @@ func waitUntilCardPresent(ctx *scard.Context, readers []string) (int, error) {
 
 	for {
 		for i := range rs {
-			if rs[i].EventState & scard.STATE_PRESENT != 0 {
+			if rs[i].EventState&scard.STATE_PRESENT != 0 {
 				return i, nil
 			}
 		}
@@ -78,7 +78,7 @@ func Example() {
 		fmt.Printf("\treader: %s\n\tstate: %x\n\tactive protocol: %x\n\tatr: % x\n",
 			status.Reader, status.State, status.ActiveProtocol, status.ATR)
 
-		var cmd = []byte{0x00, 0xa4, 0x00, 0x0c, 0x02, 0x3f, 0x00 } // SELECT MF
+		var cmd = []byte{0x00, 0xa4, 0x00, 0x0c, 0x02, 0x3f, 0x00} // SELECT MF
 
 		fmt.Println("Transmit:")
 		fmt.Printf("\tc-apdu: % x\n", cmd)

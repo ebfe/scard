@@ -1,5 +1,5 @@
 // pcsclite binding
-// 
+//
 // http://pcsclite.alioth.debian.org/pcsclite.html
 // http://pcsclite.alioth.debian.org/api/group__API.html
 //
@@ -58,7 +58,7 @@ const (
 
 type CardStatus struct {
 	Reader         string
-	State          uint32
+	State          State
 	ActiveProtocol Protocol
 	ATR            []byte
 }
@@ -69,6 +69,36 @@ type ReaderState struct {
 	CurrentState StateFlag
 	EventState   StateFlag
 	// TODO: ATR
+}
+
+type State uint16
+
+const (
+	ABSENT     State = C.SCARD_ABSENT
+	PRESENT    State = C.SCARD_PRESENT
+	SWALLOWED  State = C.SCARD_SWALLOWED
+	POWERED    State = C.SCARD_POWERED
+	NEGOTIABLE State = C.SCARD_NEGOTIABLE
+	SPECIFIC   State = C.SCARD_SPECIFIC
+)
+
+func (s State) String() string {
+	switch {
+	case s&ABSENT == ABSENT:
+		return "ABSENT"
+	case s&PRESENT == PRESENT:
+		return "PRESENT"
+	case s&SWALLOWED == SWALLOWED:
+		return "SWALLOWED"
+	case s&POWERED == POWERED:
+		return "POWERED"
+	case s&NEGOTIABLE == NEGOTIABLE:
+		return "NEGOTIABLE"
+	case s&SPECIFIC == SPECIFIC:
+		return "SPECIFIC"
+	default:
+		return "UNKNOWN"
+	}
 }
 
 type StateFlag uint32
@@ -291,7 +321,7 @@ func (card *Card) Status() (*CardStatus, error) {
 
 	status := &CardStatus{
 		Reader:         string(reader[0:readerLen]),
-		State:          uint32(state),
+		State:          State(state),
 		ActiveProtocol: Protocol(proto),
 		ATR:            atr[0:atrLen],
 	}

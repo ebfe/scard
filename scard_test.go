@@ -44,6 +44,17 @@ func setup(t *testing.T) *testCard {
 		t.Error(err)
 		t.FailNow()
 	}
+	var status *CardStatus
+	status, err = card.Status()
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if status.State.String() != PRESENT.String() {
+
+		t.Errorf("unexpected state: %s\n", status.State.String())
+		t.FailNow()
+	}
 
 	return &testCard{ctx: ctx, card: card}
 }
