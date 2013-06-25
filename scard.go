@@ -33,103 +33,6 @@ type Card struct {
 	activeProtocol Protocol
 }
 
-type Protocol uint32
-
-const (
-	PROTOCOL_UNDEFINED Protocol = C.SCARD_PROTOCOL_UNDEFINED
-	PROTOCOL_T0        Protocol = C.SCARD_PROTOCOL_T0
-	PROTOCOL_T1        Protocol = C.SCARD_PROTOCOL_T1
-	PROTOCOL_RAW       Protocol = C.SCARD_PROTOCOL_RAW
-	PROTOCOL_ANY       Protocol = C.SCARD_PROTOCOL_ANY
-)
-
-type ShareMode uint32
-
-const (
-	SHARE_EXCLUSIVE ShareMode = C.SCARD_SHARE_EXCLUSIVE
-	SHARE_SHARED    ShareMode = C.SCARD_SHARE_SHARED
-	SHARE_DIRECT    ShareMode = C.SCARD_SHARE_DIRECT
-)
-
-type Disposition uint32
-
-const (
-	LEAVE_CARD   Disposition = C.SCARD_LEAVE_CARD
-	RESET_CARD   Disposition = C.SCARD_RESET_CARD
-	UNPOWER_CARD Disposition = C.SCARD_UNPOWER_CARD
-	EJECT_CARD   Disposition = C.SCARD_EJECT_CARD
-)
-
-type CardStatus struct {
-	Reader         string
-	State          State
-	ActiveProtocol Protocol
-	ATR            []byte
-}
-
-type ReaderState struct {
-	Reader       string
-	UserData     interface{}
-	CurrentState StateFlag
-	EventState   StateFlag
-	// TODO: ATR
-}
-
-type State uint16
-
-const (
-	ABSENT     State = C.SCARD_ABSENT
-	PRESENT    State = C.SCARD_PRESENT
-	SWALLOWED  State = C.SCARD_SWALLOWED
-	POWERED    State = C.SCARD_POWERED
-	NEGOTIABLE State = C.SCARD_NEGOTIABLE
-	SPECIFIC   State = C.SCARD_SPECIFIC
-)
-
-func (s State) String() string {
-	switch {
-	case s&ABSENT == ABSENT:
-		return "ABSENT"
-	case s&PRESENT == PRESENT:
-		return "PRESENT"
-	case s&SWALLOWED == SWALLOWED:
-		return "SWALLOWED"
-	case s&POWERED == POWERED:
-		return "POWERED"
-	case s&NEGOTIABLE == NEGOTIABLE:
-		return "NEGOTIABLE"
-	case s&SPECIFIC == SPECIFIC:
-		return "SPECIFIC"
-	default:
-		return "UNKNOWN"
-	}
-
-	panic("unreachable")
-}
-
-type StateFlag uint32
-
-const (
-	STATE_UNAWARE     StateFlag = C.SCARD_STATE_UNAWARE
-	STATE_IGNORE      StateFlag = C.SCARD_STATE_IGNORE
-	STATE_CHANGED     StateFlag = C.SCARD_STATE_CHANGED
-	STATE_UNKNOWN     StateFlag = C.SCARD_STATE_UNKNOWN
-	STATE_UNAVAILABLE StateFlag = C.SCARD_STATE_UNAVAILABLE
-	STATE_EMPTY       StateFlag = C.SCARD_STATE_EMPTY
-	STATE_PRESENT     StateFlag = C.SCARD_STATE_PRESENT
-	STATE_ATRMATCH    StateFlag = C.SCARD_STATE_ATRMATCH
-	STATE_EXCLUSIVE   StateFlag = C.SCARD_STATE_EXCLUSIVE
-	STATE_INUSE       StateFlag = C.SCARD_STATE_INUSE
-	STATE_MUTE        StateFlag = C.SCARD_STATE_MUTE
-	STATE_UNPOWERED   StateFlag = C.SCARD_STATE_UNPOWERED
-)
-
-type Timeout uint32
-
-const (
-	INFINITE Timeout = C.INFINITE
-)
-
 // wraps SCardEstablishContext
 func EstablishContext() (*Context, error) {
 	var ctx Context
@@ -345,8 +248,6 @@ func (card *Card) Transmit(cmd []byte) ([]byte, error) {
 		sendpci.dwProtocol = C.SCARD_PROTOCOL_T0
 	case PROTOCOL_T1:
 		sendpci.dwProtocol = C.SCARD_PROTOCOL_T1
-	case PROTOCOL_RAW:
-		sendpci.dwProtocol = C.SCARD_PROTOCOL_RAW
 	default:
 		panic("unknown protocol")
 	}
