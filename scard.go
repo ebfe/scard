@@ -1,3 +1,5 @@
+// +build !windows
+
 // pcsclite binding
 //
 // http://pcsclite.alioth.debian.org/pcsclite.html

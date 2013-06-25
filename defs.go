@@ -80,6 +80,13 @@ const (
 	INFINITE Timeout = 0xffffffff
 )
 
+const (
+	MAX_BUFFER_SIZE = 264
+	MAX_BUFFER_SIZE_EXTENDED = 4 + 3 + (1<<16) + 3 + 2
+	MAX_READERNAME = 128
+	MAX_ATR_SIZE = 33
+)
+
 type CardStatus struct {
 	Reader         string
 	State          State
@@ -94,3 +101,4 @@ type ReaderState struct {
 	EventState   StateFlag
 	// TODO: ATR
 }
+
