@@ -15,6 +15,10 @@ import (
 	"unsafe"
 )
 
+func (e scardError) Error() string {
+	return "scard: " + C.GoString(C.pcsc_stringify_error(C.LONG(e)))
+}
+
 // Version returns the libpcsclite version string
 func Version() string {
 	return C.PCSCLITE_VERSION_NUMBER
@@ -132,7 +136,7 @@ func EstablishContext() (*Context, error) {
 
 	r := C.SCardEstablishContext(C.SCARD_SCOPE_SYSTEM, nil, nil, &ctx.ctx)
 	if r != C.SCARD_S_SUCCESS {
-		return nil, newError(r)
+		return nil, scardError(r)
 	}
 
 	return &ctx, nil
@@ -147,7 +151,7 @@ func (ctx *Context) IsValid() (bool, error) {
 	case C.SCARD_E_INVALID_HANDLE:
 		return false, nil
 	default:
-		return false, newError(r)
+		return false, scardError(r)
 	}
 	panic("unreachable")
 }
@@ -156,7 +160,7 @@ func (ctx *Context) IsValid() (bool, error) {
 func (ctx *Context) Cancel() error {
 	r := C.SCardCancel(ctx.ctx)
 	if r != C.SCARD_S_SUCCESS {
-		return newError(r)
+		return scardError(r)
 	}
 	return nil
 }
@@ -165,7 +169,7 @@ func (ctx *Context) Cancel() error {
 func (ctx *Context) Release() error {
 	r := C.SCardReleaseContext(ctx.ctx)
 	if r != C.SCARD_S_SUCCESS {
-		return newError(r)
+		return scardError(r) 
 	}
 	return nil
 }
@@ -176,7 +180,7 @@ func (ctx *Context) ListReaders() ([]string, error) {
 
 	r := C.SCardListReaders(ctx.ctx, nil, nil, &needed)
 	if r != C.SCARD_S_SUCCESS {
-		return nil, newError(r)
+		return nil, scardError(r)
 	}
 
 	data := make([]byte, needed)
@@ -184,7 +188,7 @@ func (ctx *Context) ListReaders() ([]string, error) {
 
 	r = C.SCardListReaders(ctx.ctx, nil, cdata, &needed)
 	if r != C.SCARD_S_SUCCESS {
-		return nil, newError(r)
+		return nil, scardError(r)
 	}
 
 	var readers []string
@@ -203,7 +207,7 @@ func (ctx *Context) ListReaderGroups() ([]string, error) {
 
 	r := C.SCardListReaderGroups(ctx.ctx, nil, &needed)
 	if r != C.SCARD_S_SUCCESS {
-		return nil, newError(r)
+		return nil, scardError(r)
 	}
 
 	data := make([]byte, needed)
@@ -211,7 +215,7 @@ func (ctx *Context) ListReaderGroups() ([]string, error) {
 
 	r = C.SCardListReaderGroups(ctx.ctx, cdata, &needed)
 	if r != C.SCARD_S_SUCCESS {
-		return nil, newError(r)
+		return nil, scardError(r)
 	}
 
 	var groups []string
@@ -240,7 +244,7 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout Timeout)
 		C.DWORD(len(crs)))
 
 	if r != C.SCARD_S_SUCCESS {
-		return newError(r)
+		return scardError(r)
 	}
 
 	for i := range readerStates {
@@ -260,7 +264,7 @@ func (ctx *Context) Connect(reader string, mode ShareMode, proto Protocol) (*Car
 
 	r := C.SCardConnect(ctx.ctx, creader, C.DWORD(mode), C.DWORD(proto), &card.handle, &activeProtocol)
 	if r != C.SCARD_S_SUCCESS {
-		return nil, newError(r)
+		return nil, scardError(r)
 	}
 
 	card.activeProtocol = Protocol(activeProtocol)
@@ -271,7 +275,7 @@ func (ctx *Context) Connect(reader string, mode ShareMode, proto Protocol) (*Car
 func (card *Card) Disconnect(d Disposition) error {
 	r := C.SCardDisconnect(card.handle, C.DWORD(d))
 	if r != C.SCARD_S_SUCCESS {
-		return newError(r)
+		return scardError(r) 
 	}
 	return nil
 }
@@ -282,7 +286,7 @@ func (card *Card) Reconnect(mode ShareMode, protocol Protocol, init Disposition)
 
 	r := C.SCardReconnect(card.handle, C.DWORD(mode), C.DWORD(protocol), C.DWORD(init), &activeProtocol)
 	if r != C.SCARD_S_SUCCESS {
-		return newError(r)
+		return scardError(r)
 	}
 
 	card.activeProtocol = Protocol(activeProtocol)
@@ -294,7 +298,7 @@ func (card *Card) Reconnect(mode ShareMode, protocol Protocol, init Disposition)
 func (card *Card) BeginTransaction() error {
 	r := C.SCardBeginTransaction(card.handle)
 	if r != C.SCARD_S_SUCCESS {
-		return newError(r)
+		return scardError(r)
 	}
 	return nil
 }
@@ -303,7 +307,7 @@ func (card *Card) BeginTransaction() error {
 func (card *Card) EndTransaction(d Disposition) error {
 	r := C.SCardEndTransaction(card.handle, C.DWORD(d))
 	if r != C.SCARD_S_SUCCESS {
-		return newError(r)
+		return scardError(r)
 	}
 	return nil
 }
@@ -318,7 +322,7 @@ func (card *Card) Status() (*CardStatus, error) {
 
 	r := C.SCardStatus(card.handle, (C.LPSTR)(unsafe.Pointer(&reader[0])), &readerLen, &state, &proto, (*C.BYTE)(&atr[0]), &atrLen)
 	if r != C.SCARD_S_SUCCESS {
-		return nil, newError(r)
+		return nil, scardError(r)
 	}
 
 	status := &CardStatus{
@@ -353,7 +357,7 @@ func (card *Card) Transmit(cmd []byte) ([]byte, error) {
 
 	r := C.SCardTransmit(card.handle, &sendpci, (*C.BYTE)(&cmd[0]), C.DWORD(len(cmd)), &recvpci, (*C.BYTE)(&recv[0]), &recvlen)
 	if r != C.SCARD_S_SUCCESS {
-		return nil, newError(r)
+		return nil, scardError(r)
 	}
 
 	rsp := make([]byte, recvlen)
@@ -378,7 +382,7 @@ func (card *Card) Control(ctrl uint32, cmd []byte) ([]byte, error) {
 			(C.LPVOID)(unsafe.Pointer(&recv[0])), C.DWORD(len(recv)), &recvlen)
 	}
 	if r != C.SCARD_S_SUCCESS {
-		return nil, newError(r)
+		return nil, scardError(r)
 	}
 
 	rsp := make([]byte, recvlen)
@@ -393,14 +397,14 @@ func (card *Card) GetAttrib(id uint32) ([]byte, error) {
 
 	r := C.SCardGetAttrib(card.handle, C.DWORD(id), nil, &needed)
 	if r != C.SCARD_S_SUCCESS {
-		return nil, newError(r)
+		return nil, scardError(r)
 	}
 
 	var attrib = make([]byte, needed)
 
 	r = C.SCardGetAttrib(card.handle, C.DWORD(id), (*C.BYTE)(&attrib[0]), &needed)
 	if r != C.SCARD_S_SUCCESS {
-		return nil, newError(r)
+		return nil, scardError(r)
 	}
 
 	return attrib[0:needed], nil
@@ -410,7 +414,7 @@ func (card *Card) GetAttrib(id uint32) ([]byte, error) {
 func (card *Card) SetAttrib(id uint32, data []byte) error {
 	r := C.SCardSetAttrib(card.handle, C.DWORD(id), (*C.BYTE)(&data[0]), C.DWORD(len(data)))
 	if r != C.SCARD_S_SUCCESS {
-		return newError(r)
+		return scardError(r)
 	}
 	return nil
 }

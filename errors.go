@@ -1,19 +1,6 @@
 package scard
 
-// #cgo pkg-config: libpcsclite
-// #include <winscard.h>
-import "C"
-
 type scardError uint32
-
-func (e *scardError) Error() string {
-	return "scard: " + C.GoString(C.pcsc_stringify_error(C.LONG(*e)))
-}
-
-func newError(code C.LONG) *scardError {
-	e := scardError(code)
-	return &e
-}
 
 const (
 	S_SUCCESS                 scardError = 0x00000000
