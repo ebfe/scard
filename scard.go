@@ -99,6 +99,8 @@ func (s State) String() string {
 	default:
 		return "UNKNOWN"
 	}
+
+	panic("unreachable")
 }
 
 type StateFlag uint32
