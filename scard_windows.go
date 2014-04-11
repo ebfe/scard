@@ -16,6 +16,8 @@ var (
 	procConnect          = modwinscard.NewProc("SCardConnectW")
 	procDisconnect       = modwinscard.NewProc("SCardDisconnect")
 	procReconnect	     = modwinscard.NewProc("SCardReconnect")
+	procBeginTransaction = modwinscard.NewProc("SCardBeginTransaction")
+	procEndTransaction   = modwinscard.NewProc("SCardEndTransaction")
 	procStatus           = modwinscard.NewProc("SCardStatusW")
 	procGetAttrib        = modwinscard.NewProc("SCardGetAttrib")
 )
@@ -169,12 +171,20 @@ func (card *Card) Reconnect(mode ShareMode, protocol Protocol, init Disposition)
 
 // wraps SCardBeginTransaction
 func (card *Card) BeginTransaction() error {
-	panic("scard: not implemented")
+	r, _, _ := procBeginTransaction.Call(card.handle)
+	if scardError(r) != S_SUCCESS {
+		return scardError(r)
+	}
+	return nil
 }
 
 // wraps SCardEndTransaction
 func (card *Card) EndTransaction(d Disposition) error {
-	panic("scard: not implemented")
+	r, _, _ := procEndTransaction.Call(card.handle, uintptr(d))
+	if scardError(r) != S_SUCCESS {
+		return scardError(r)
+	}
+	return nil
 }
 
 // wraps SCardStatus
