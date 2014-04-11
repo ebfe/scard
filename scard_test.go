@@ -18,8 +18,8 @@ func setup(t *testing.T) *testCard {
 
 	ctx, err := EstablishContext()
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		t.Skipf("EstablishContext: %s", err)
+		t.SkipNow()
 	}
 
 	defer func() {
@@ -35,28 +35,15 @@ func setup(t *testing.T) *testCard {
 	}
 
 	if len(readers) == 0 {
-		t.Logf("No readers")
-		t.FailNow()
+		t.Skip("no smartcard reader found")
+		t.SkipNow()
 	}
 
 	card, err = ctx.Connect(readers[0], SHARE_EXCLUSIVE, PROTOCOL_ANY)
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		t.Skip("no smartcard found")
+		t.SkipNow()
 	}
-	var status *CardStatus
-	status, err = card.Status()
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	t.Logf("CardState: %+#v\n", status)
-	if status.State.String() != PRESENT.String() {
-
-		//t.Errorf("unexpected state: %s\n", status.State.String())
-		//	t.FailNow()
-	}
-
 	return &testCard{ctx: ctx, card: card}
 }
 
@@ -73,7 +60,8 @@ func teardown(c *testCard) {
 func TestListReaders(t *testing.T) {
 	ctx, err := EstablishContext()
 	if err != nil {
-		t.Fatal(err)
+		t.Skipf("EstablishContext: %s", err)
+		t.SkipNow()
 	}
 	defer ctx.Release()
 	readers, err := ctx.ListReaders()
@@ -88,7 +76,8 @@ func TestListReaders(t *testing.T) {
 func TestListReaderGroups(t *testing.T) {
 	ctx, err := EstablishContext()
 	if err != nil {
-		t.Fatal(err)
+		t.Skipf("EstablishContext: %s", err)
+		t.SkipNow()
 	}
 	defer ctx.Release()
 	groups, err := ctx.ListReaderGroups()
