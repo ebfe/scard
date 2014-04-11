@@ -1,6 +1,7 @@
 package scard
 
 import (
+	"runtime"
 	"testing"
 )
 
@@ -107,11 +108,14 @@ func TestControl(t *testing.T) {
 	c := setup(t)
 	defer teardown(c)
 
-	rsp, err := c.card.Control(0x42003400 /* CM_IOCTL_GET_FEATURE_REQUEST */, nil)
+	// euh...
+	ioctl := uint32(0x42000000) + 3400 // CM_IOCTL_GET_FEATURE_REQUEST
+	if runtime.GOOS == "windows" {
+		ioctl = 0x00310000 + 3400 << 2
+	}
+
+	rsp, err := c.card.Control(ioctl, nil)
 	if err != nil {
-		if err.(scardError) == E_UNSUPPORTED_FEATURE {
-			return
-		}
 		t.Fatal(err)
 	}
 	t.Logf("rsp: % x\n", rsp)
