@@ -1,7 +1,6 @@
 package scard
 
 import (
-	"bytes"
 	"fmt"
 	"syscall"
 	"unsafe"
@@ -11,11 +10,11 @@ var (
 	modwinscard          = syscall.NewLazyDLL("winscard.dll")
 	procEstablishContext = modwinscard.NewProc("SCardEstablishContext")
 	procRelease          = modwinscard.NewProc("SCardReleaseContext")
-	procListReaders      = modwinscard.NewProc("SCardListReadersA")
-	procConnect          = modwinscard.NewProc("SCardConnectA")
-	procDisconnect	     = modwinscard.NewProc("SCardDisconnect")
-	procStatus	     = modwinscard.NewProc("SCardStatusA")
-	procGetAttrib	     = modwinscard.NewProc("SCardGetAttrib")
+	procListReaders      = modwinscard.NewProc("SCardListReadersW")
+	procConnect          = modwinscard.NewProc("SCardConnectW")
+	procDisconnect       = modwinscard.NewProc("SCardDisconnect")
+	procStatus           = modwinscard.NewProc("SCardStatusW")
+	procGetAttrib        = modwinscard.NewProc("SCardGetAttrib")
 )
 
 type Context struct {
@@ -68,7 +67,7 @@ func (ctx *Context) Release() error {
 
 // wraps SCardListReaders
 func (ctx *Context) ListReaders() ([]string, error) {
-	var needed uint32
+	var needed uintptr
 
 	r, _, _ := procListReaders.Call(
 		ctx.ctx,
@@ -79,24 +78,31 @@ func (ctx *Context) ListReaders() ([]string, error) {
 		return nil, scardError(r)
 	}
 
-	data := make([]byte, needed)
-
+	data := make([]uint16, needed)
+	needed <<= 1
 	r, _, _ = procListReaders.Call(
-		ctx.ctx, 
-		0, 
-		uintptr(unsafe.Pointer(&data[0])), 
+		ctx.ctx,
+		0,
+		uintptr(unsafe.Pointer(&data[0])),
 		uintptr(unsafe.Pointer(&needed)))
 	if scardError(r) != S_SUCCESS {
 		return nil, scardError(r)
 	}
 
-	var readers []string
-	for _, b := range bytes.Split(data, []byte{0}) {
-		if len(b) > 0 {
-			readers = append(readers, string(b))
-		}
-	}
+		fmt.Printf("% x\n", data)
 
+	var readers []string
+	for len(data) > 0 {
+		pos := 0
+		for ; pos < len(data); pos++ {
+			if data[pos] == 0 {
+				break
+			}
+		}
+		reader := syscall.UTF16ToString(data[:pos])
+		readers = append(readers, reader)
+		data = data[pos+1:]
+	}
 	return readers, nil
 }
 
@@ -114,12 +120,14 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout Timeout)
 func (ctx *Context) Connect(reader string, mode ShareMode, proto Protocol) (*Card, error) {
 	var card Card
 
-	creader := []byte(reader)
-	creader = append(creader, 0)
+	creader, err := syscall.UTF16PtrFromString(reader)
+	if err != nil {
+		return nil, err
+	}
 
 	r, _, _ := procConnect.Call(
-		ctx.ctx, 
-		uintptr(unsafe.Pointer(&creader[0])),
+		ctx.ctx,
+		uintptr(unsafe.Pointer(creader)),
 		uintptr(mode),
 		uintptr(proto),
 		uintptr(unsafe.Pointer(&card.handle)),
@@ -136,7 +144,7 @@ func (ctx *Context) Connect(reader string, mode ShareMode, proto Protocol) (*Car
 func (card *Card) Disconnect(d Disposition) error {
 	r, _, _ := procDisconnect.Call(card.handle, uintptr(d))
 	if scardError(r) != S_SUCCESS {
-		return scardError(r) 
+		return scardError(r)
 	}
 	return nil
 }
@@ -176,7 +184,7 @@ func (card *Card) Status() (*CardStatus, error) {
 		return nil, scardError(r)
 	}
 
-	status := &CardStatus {
+	status := &CardStatus{
 		Reader:         string(reader[0:readerLen]),
 		State:          State(state),
 		ActiveProtocol: Protocol(proto),
@@ -201,7 +209,7 @@ func (card *Card) GetAttrib(id uint32) ([]byte, error) {
 	var needed uintptr
 
 	r, _, _ := procGetAttrib.Call(
-		card.handle, 
+		card.handle,
 		uintptr(id),
 		0,
 		uintptr(unsafe.Pointer(&needed)))
@@ -212,7 +220,7 @@ func (card *Card) GetAttrib(id uint32) ([]byte, error) {
 	var attrib = make([]byte, needed)
 
 	r, _, _ = procGetAttrib.Call(
-		card.handle, 
+		card.handle,
 		uintptr(id),
 		uintptr(unsafe.Pointer(&attrib[0])),
 		uintptr(unsafe.Pointer(&needed)))
