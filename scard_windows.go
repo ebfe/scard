@@ -14,6 +14,7 @@ var (
 	procIsValid          = modwinscard.NewProc("SCardIsValidContext")
 	procCancel           = modwinscard.NewProc("SCardCancel")
 	procListReaders      = modwinscard.NewProc("SCardListReadersW")
+	procListReaderGroups = modwinscard.NewProc("SCardListReaderGroupsW")
 	procGetStatusChange  = modwinscard.NewProc("SCardGetStatusChangeW")
 	procConnect          = modwinscard.NewProc("SCardConnectW")
 	procDisconnect       = modwinscard.NewProc("SCardDisconnect")
@@ -140,7 +141,39 @@ func (ctx *Context) ListReaders() ([]string, error) {
 
 // wraps SCardListReaderGroups
 func (ctx *Context) ListReaderGroups() ([]string, error) {
-	panic("scard: not implemented")
+	var needed uintptr
+
+	r, _, _ := procListReaderGroups.Call(
+		ctx.ctx,
+		0,
+		uintptr(unsafe.Pointer(&needed)))
+	if scardError(r) != S_SUCCESS {
+		return nil, scardError(r)
+	}
+
+	data := make([]uint16, needed)
+	r, _, _ = procListReaderGroups.Call(
+		ctx.ctx,
+		uintptr(unsafe.Pointer(&data[0])),
+		uintptr(unsafe.Pointer(&needed)))
+	if scardError(r) != S_SUCCESS {
+		return nil, scardError(r)
+	}
+
+	var groups []string
+	for len(data) > 0 {
+		pos := 0
+		for ; pos < len(data); pos++ {
+			if data[pos] == 0 {
+				break
+			}
+		}
+		group := syscall.UTF16ToString(data[:pos])
+		groups = append(groups, group)
+		data = data[pos+1:]
+	}
+
+	return groups, nil
 }
 
 type _SCARD_READERSTATE struct {

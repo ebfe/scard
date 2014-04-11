@@ -75,12 +75,28 @@ func TestListReaders(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer ctx.Release()
 	readers, err := ctx.ListReaders()
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, reader := range readers {
 		t.Log(reader)
+	}
+}
+
+func TestListReaderGroups(t *testing.T) {
+	ctx, err := EstablishContext()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ctx.Release()
+	groups, err := ctx.ListReaderGroups()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, group := range groups {
+		t.Log(group)
 	}
 }
 
