@@ -89,6 +89,46 @@ func TestListReaderGroups(t *testing.T) {
 	}
 }
 
+func TestTransmit(t *testing.T) {
+	c := setup(t)
+	defer teardown(c)
+
+	var cmd = []byte{0x00, 0xa4, 0x00, 0x0c, 0x02, 0x3f, 0x00} // SELECT MF
+
+	t.Logf("cmd: % x\n", cmd)
+	rsp, err := c.card.Transmit(cmd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("rsp: % x\n", rsp)
+}
+
+func TestControl(t *testing.T) {
+	c := setup(t)
+	defer teardown(c)
+
+	rsp, err := c.card.Control(0x42003400 /* CM_IOCTL_GET_FEATURE_REQUEST */, nil)
+	if err != nil {
+		if err.(scardError) == E_UNSUPPORTED_FEATURE {
+			return
+		}
+		t.Fatal(err)
+	}
+	t.Logf("rsp: % x\n", rsp)
+}
+
+func TestStatus(t *testing.T) {
+	c := setup(t)
+	defer teardown(c)
+
+	status, err := c.card.Status()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%+#v\n", status)
+}
+
+
 func TestGetAttrib(t *testing.T) {
 	c := setup(t)
 	defer teardown(c)

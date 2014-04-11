@@ -26,7 +26,7 @@ const (
 	EJECT_CARD   Disposition = 3
 )
 
-type State uint16
+type State uint32
 
 const (
 	UNKNOWN    State = 0x0001
@@ -37,25 +37,6 @@ const (
 	NEGOTIABLE State = 0x0020
 	SPECIFIC   State = 0x0040
 )
-
-func (s State) String() string {
-	switch {
-	case s&ABSENT == ABSENT:
-		return "ABSENT"
-	case s&PRESENT == PRESENT:
-		return "PRESENT"
-	case s&SWALLOWED == SWALLOWED:
-		return "SWALLOWED"
-	case s&POWERED == POWERED:
-		return "POWERED"
-	case s&NEGOTIABLE == NEGOTIABLE:
-		return "NEGOTIABLE"
-	case s&SPECIFIC == SPECIFIC:
-		return "SPECIFIC"
-	default:
-		return "UNKNOWN"
-	}
-}
 
 type StateFlag uint32
 
