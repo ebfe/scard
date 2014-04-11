@@ -131,8 +131,10 @@ func (ctx *Context) ListReaders() ([]string, error) {
 				break
 			}
 		}
-		reader := syscall.UTF16ToString(data[:pos])
-		readers = append(readers, reader)
+		if data[0] != 0 {
+			reader := syscall.UTF16ToString(data[:pos])
+			readers = append(readers, reader)
+		}
 		data = data[pos+1:]
 	}
 
@@ -168,8 +170,10 @@ func (ctx *Context) ListReaderGroups() ([]string, error) {
 				break
 			}
 		}
-		group := syscall.UTF16ToString(data[:pos])
-		groups = append(groups, group)
+		if data[0] != 0 {
+			group := syscall.UTF16ToString(data[:pos])
+			groups = append(groups, group)
+		}
 		data = data[pos+1:]
 	}
 
