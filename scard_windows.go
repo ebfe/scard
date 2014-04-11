@@ -24,6 +24,7 @@ var (
 	procTransmit         = modwinscard.NewProc("SCardTransmit")
 	procControl          = modwinscard.NewProc("SCardControl")
 	procGetAttrib        = modwinscard.NewProc("SCardGetAttrib")
+	procSetAttrib        = modwinscard.NewProc("SCardSetAttrib")
 
 	dataT0Pci = modwinscard.NewProc("g_rgSCardT0Pci")
 	dataT1Pci = modwinscard.NewProc("g_rgSCardT1Pci")
@@ -369,5 +370,13 @@ func (card *Card) GetAttrib(id uint32) ([]byte, error) {
 
 // wraps SCardSetAttrib
 func (card *Card) SetAttrib(id uint32, data []byte) error {
-	panic("scard: not implemented") // TODO
+	r, _, _ := procSetAttrib.Call(
+		card.handle,
+		uintptr(id),
+		uintptr(unsafe.Pointer(&data[0])),
+		uintptr(len(data)))
+	if scardError(r) != S_SUCCESS {
+		return scardError(r)
+	}
+	return nil
 }
