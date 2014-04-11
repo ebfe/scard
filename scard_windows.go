@@ -58,7 +58,7 @@ type scardError uintptr
 
 func (e scardError) Error() string {
 	err := syscall.Errno(e)
-	return fmt.Sprintf("scard: error code %x: %s", uintptr(e), err.Error())
+	return fmt.Sprintf("scard: error(%x): %s", uintptr(e), err.Error())
 }
 
 // wraps SCardEstablishContext
