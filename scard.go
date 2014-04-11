@@ -221,19 +221,25 @@ func (card *Card) EndTransaction(d Disposition) error {
 
 // wraps SCardStatus
 func (card *Card) Status() (*CardStatus, error) {
-	var reader [C.MAX_READERNAME + 1]byte
-	var readerLen = C.DWORD(len(reader))
+	var readerBuf [C.MAX_READERNAME + 1]byte
+	var readerLen = C.DWORD(len(readerBuf))
 	var state, proto C.DWORD
 	var atr [C.MAX_ATR_SIZE]byte
 	var atrLen = C.DWORD(len(atr))
 
-	r := C.SCardStatus(card.handle, (C.LPSTR)(unsafe.Pointer(&reader[0])), &readerLen, &state, &proto, (*C.BYTE)(&atr[0]), &atrLen)
+	r := C.SCardStatus(card.handle, (C.LPSTR)(unsafe.Pointer(&readerBuf[0])), &readerLen, &state, &proto, (*C.BYTE)(&atr[0]), &atrLen)
 	if r != C.SCARD_S_SUCCESS {
 		return nil, scardError(r)
 	}
 
+	// strip terminating 0
+	reader := readerBuf[:readerLen]
+	if z := bytes.IndexByte(reader, 0); z != -1 {
+		reader = reader[:z]
+	}
+
 	status := &CardStatus{
-		Reader:         string(reader[0:readerLen]),
+		Reader:         string(reader),
 		State:          State(state),
 		ActiveProtocol: Protocol(proto),
 		ATR:            atr[0:atrLen],
