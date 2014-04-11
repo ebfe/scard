@@ -113,7 +113,6 @@ func (ctx *Context) ListReaders() ([]string, error) {
 	}
 
 	data := make([]uint16, needed)
-	needed <<= 1
 	r, _, _ = procListReaders.Call(
 		ctx.ctx,
 		0,
