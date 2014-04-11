@@ -21,7 +21,24 @@ var (
 	procEndTransaction   = modwinscard.NewProc("SCardEndTransaction")
 	procStatus           = modwinscard.NewProc("SCardStatusW")
 	procGetAttrib        = modwinscard.NewProc("SCardGetAttrib")
+
+	dataT0Pci = modwinscard.NewProc("g_rgSCardT0Pci")
+	dataT1Pci = modwinscard.NewProc("g_rgSCardT1Pci")
 )
+
+var scardIoReqT0 uintptr
+var scardIoReqT1 uintptr
+
+func init() {
+	if err := dataT0Pci.Find(); err != nil {
+		panic(err)
+	}
+	scardIoReqT0 = dataT0Pci.Addr()
+	if err := dataT1Pci.Find(); err != nil {
+		panic(err)
+	}
+	scardIoReqT1 = dataT1Pci.Addr()
+}
 
 type Context struct {
 	ctx uintptr
