@@ -111,7 +111,7 @@ func TestControl(t *testing.T) {
 	// euh...
 	ioctl := uint32(0x42000000) + 3400 // CM_IOCTL_GET_FEATURE_REQUEST
 	if runtime.GOOS == "windows" {
-		ioctl = 0x00310000 + 3400 << 2
+		ioctl = 0x00310000 + 3400<<2
 	}
 
 	rsp, err := c.card.Control(ioctl, nil)
@@ -131,7 +131,6 @@ func TestStatus(t *testing.T) {
 	}
 	t.Logf("%+#v\n", status)
 }
-
 
 func TestGetAttrib(t *testing.T) {
 	c := setup(t)
