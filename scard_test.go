@@ -69,6 +69,20 @@ func teardown(c *testCard) {
 	}
 }
 
+func TestListReaders(t *testing.T) {
+	ctx, err := EstablishContext()
+	if err != nil {
+		t.Fatal(err)
+	}
+	readers, err := ctx.ListReaders()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, reader := range readers {
+		t.Log(reader)
+	}
+}
+
 func TestGetAttrib(t *testing.T) {
 	c := setup(t)
 	defer teardown(c)
