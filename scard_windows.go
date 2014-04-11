@@ -10,9 +10,12 @@ var (
 	modwinscard          = syscall.NewLazyDLL("winscard.dll")
 	procEstablishContext = modwinscard.NewProc("SCardEstablishContext")
 	procRelease          = modwinscard.NewProc("SCardReleaseContext")
+	procIsValid	     = modwinscard.NewProc("SCardIsValidContext")
+	procCancel	     = modwinscard.NewProc("SCardCancel")
 	procListReaders      = modwinscard.NewProc("SCardListReadersW")
 	procConnect          = modwinscard.NewProc("SCardConnectW")
 	procDisconnect       = modwinscard.NewProc("SCardDisconnect")
+	procReconnect	     = modwinscard.NewProc("SCardReconnect")
 	procStatus           = modwinscard.NewProc("SCardStatusW")
 	procGetAttrib        = modwinscard.NewProc("SCardGetAttrib")
 )
@@ -29,7 +32,6 @@ type Card struct {
 type scardError uintptr
 
 func (e scardError) Error() string {
-	//return "scard: " + C.GoString(C.pcsc_stringify_error(C.LONG(e)))
 	err := syscall.Errno(e)
 	return fmt.Sprintf("scard: error code %x: %s", uintptr(e), err.Error())
 }
@@ -48,12 +50,20 @@ func EstablishContext() (*Context, error) {
 
 // wraps SCardIsValidContext
 func (ctx *Context) IsValid() (bool, error) {
-	panic("scard: not implemented") // TODO
+	r, _, _ := procIsValid.Call(ctx.ctx)
+	if scardError(r) != S_SUCCESS {
+		return false, scardError(r)
+	}
+	return true, nil
 }
 
 // wraps SCardCancel
 func (ctx *Context) Cancel() error {
-	panic("scard: not implemented") // TODO
+	r, _, _ := procCancel.Call(ctx.ctx)
+	if scardError(r) != S_SUCCESS {
+		return scardError(r)
+	}
+	return nil
 }
 
 // wraps SCardReleaseContext
@@ -150,7 +160,11 @@ func (card *Card) Disconnect(d Disposition) error {
 
 // wraps SCardReconnect
 func (card *Card) Reconnect(mode ShareMode, protocol Protocol, init Disposition) error {
-	panic("scard: not implemented")
+	r, _, _ := procReconnect.Call(card.handle, uintptr(protocol), uintptr(init));
+	if scardError(r) != S_SUCCESS {
+		return scardError(r)
+	}
+	return nil
 }
 
 // wraps SCardBeginTransaction
