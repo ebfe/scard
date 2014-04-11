@@ -13,6 +13,7 @@ var (
 	procIsValid	     = modwinscard.NewProc("SCardIsValidContext")
 	procCancel	     = modwinscard.NewProc("SCardCancel")
 	procListReaders      = modwinscard.NewProc("SCardListReadersW")
+	procGetStatusChange  = modwinscard.NewProc("SCardGetStatusChangeW")
 	procConnect          = modwinscard.NewProc("SCardConnectW")
 	procDisconnect       = modwinscard.NewProc("SCardDisconnect")
 	procReconnect	     = modwinscard.NewProc("SCardReconnect")
@@ -122,9 +123,43 @@ func (ctx *Context) ListReaderGroups() ([]string, error) {
 	panic("scard: not implemented")
 }
 
+type _SCARD_READERSTATE struct {
+	szReader       uintptr 
+	pvUserData     uintptr
+	dwCurrentState uint32
+	dwEventState   uint32
+	cbAtr          uint32
+	rgbAtr         [36]byte
+}
+
 // wraps SCardGetStatusChange
 func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout Timeout) error {
-	panic("scard: not implemented")
+	crs := make([]_SCARD_READERSTATE, len(readerStates))
+
+	for i := range readerStates {
+		rptr, err := syscall.UTF16PtrFromString(readerStates[i].Reader)
+		if err != nil {
+			return err
+		}
+		crs[i].szReader = uintptr(unsafe.Pointer(rptr))
+		crs[i].dwCurrentState = uint32(readerStates[i].CurrentState)
+	}
+
+	r, _, _ := procGetStatusChange.Call(
+		ctx.ctx, 
+		uintptr(timeout),
+		uintptr(unsafe.Pointer(&crs[0])),
+		uintptr(len(crs)))
+
+	if scardError(r) != S_SUCCESS {
+		return scardError(r)
+	}
+
+	for i := range readerStates {
+		readerStates[i].EventState = StateFlag(crs[i].dwEventState)
+	}
+
+	return nil
 }
 
 // wraps SCardConnect
