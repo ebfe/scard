@@ -89,8 +89,6 @@ func (ctx *Context) ListReaders() ([]string, error) {
 		return nil, scardError(r)
 	}
 
-		fmt.Printf("% x\n", data)
-
 	var readers []string
 	for len(data) > 0 {
 		pos := 0
@@ -103,6 +101,7 @@ func (ctx *Context) ListReaders() ([]string, error) {
 		readers = append(readers, reader)
 		data = data[pos+1:]
 	}
+
 	return readers, nil
 }
 
