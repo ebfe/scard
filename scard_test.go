@@ -50,6 +50,7 @@ func setup(t *testing.T) *testCard {
 		t.Error(err)
 		t.FailNow()
 	}
+	t.Log("CardState: %+#v\n", status)
 	if status.State.String() != PRESENT.String() {
 
 		//t.Errorf("unexpected state: %s\n", status.State.String())

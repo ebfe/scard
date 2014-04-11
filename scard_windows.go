@@ -189,7 +189,7 @@ func (card *Card) EndTransaction(d Disposition) error {
 
 // wraps SCardStatus
 func (card *Card) Status() (*CardStatus, error) {
-	var reader [MAX_READERNAME + 1]byte
+	var reader [MAX_READERNAME + 1]uint16
 	var readerLen = uint32(len(reader))
 	var state, proto uint32
 	var atr [MAX_ATR_SIZE]byte
@@ -208,7 +208,7 @@ func (card *Card) Status() (*CardStatus, error) {
 	}
 
 	status := &CardStatus{
-		Reader:         string(reader[0:readerLen]),
+		Reader:         syscall.UTF16ToString(reader[0:readerLen]),
 		State:          State(state),
 		ActiveProtocol: Protocol(proto),
 		ATR:            atr[0:atrLen],
