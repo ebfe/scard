@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	modwinscard          = syscall.NewLazyDLL("winscard.dll")
+	modwinscard = syscall.NewLazyDLL("winscard.dll")
+
 	procEstablishContext = modwinscard.NewProc("SCardEstablishContext")
 	procRelease          = modwinscard.NewProc("SCardReleaseContext")
 	procIsValid          = modwinscard.NewProc("SCardIsValidContext")
@@ -21,6 +22,7 @@ var (
 	procEndTransaction   = modwinscard.NewProc("SCardEndTransaction")
 	procStatus           = modwinscard.NewProc("SCardStatusW")
 	procTransmit         = modwinscard.NewProc("SCardTransmit")
+	procControl          = modwinscard.NewProc("SCardControl")
 	procGetAttrib        = modwinscard.NewProc("SCardGetAttrib")
 
 	dataT0Pci = modwinscard.NewProc("g_rgSCardT0Pci")
@@ -305,7 +307,37 @@ func (card *Card) Transmit(cmd []byte) ([]byte, error) {
 
 // wraps SCardControl
 func (card *Card) Control(ctrl uint32, cmd []byte) ([]byte, error) {
-	panic("scard: not implemented") // TODO
+	var recv [0xffff]byte
+	var recvlen uintptr
+	var r uintptr
+
+	if len(cmd) == 0 {
+		r, _, _ = procControl.Call(
+			card.handle,
+			uintptr(ctrl),
+			0,
+			0,
+			uintptr(unsafe.Pointer(&recv[0])),
+			uintptr(len(recv)),
+			uintptr(unsafe.Pointer(&recvlen)))
+	} else {
+		r, _, _ = procControl.Call(
+			card.handle,
+			uintptr(ctrl),
+			uintptr(unsafe.Pointer(&cmd[0])),
+			uintptr(len(cmd)),
+			uintptr(unsafe.Pointer(&recv[0])),
+			uintptr(len(recv)),
+			uintptr(unsafe.Pointer(&recvlen)))
+	}
+	if scardError(r) != S_SUCCESS {
+		return nil, scardError(r)
+	}
+
+	rsp := make([]byte, recvlen)
+	copy(rsp, recv[0:recvlen])
+
+	return rsp, nil
 }
 
 // wraps SCardGetAttrib
