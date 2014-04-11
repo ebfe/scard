@@ -10,13 +10,13 @@ var (
 	modwinscard          = syscall.NewLazyDLL("winscard.dll")
 	procEstablishContext = modwinscard.NewProc("SCardEstablishContext")
 	procRelease          = modwinscard.NewProc("SCardReleaseContext")
-	procIsValid	     = modwinscard.NewProc("SCardIsValidContext")
-	procCancel	     = modwinscard.NewProc("SCardCancel")
+	procIsValid          = modwinscard.NewProc("SCardIsValidContext")
+	procCancel           = modwinscard.NewProc("SCardCancel")
 	procListReaders      = modwinscard.NewProc("SCardListReadersW")
 	procGetStatusChange  = modwinscard.NewProc("SCardGetStatusChangeW")
 	procConnect          = modwinscard.NewProc("SCardConnectW")
 	procDisconnect       = modwinscard.NewProc("SCardDisconnect")
-	procReconnect	     = modwinscard.NewProc("SCardReconnect")
+	procReconnect        = modwinscard.NewProc("SCardReconnect")
 	procBeginTransaction = modwinscard.NewProc("SCardBeginTransaction")
 	procEndTransaction   = modwinscard.NewProc("SCardEndTransaction")
 	procStatus           = modwinscard.NewProc("SCardStatusW")
@@ -142,7 +142,7 @@ func (ctx *Context) ListReaderGroups() ([]string, error) {
 }
 
 type _SCARD_READERSTATE struct {
-	szReader       uintptr 
+	szReader       uintptr
 	pvUserData     uintptr
 	dwCurrentState uint32
 	dwEventState   uint32
@@ -164,7 +164,7 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout Timeout)
 	}
 
 	r, _, _ := procGetStatusChange.Call(
-		ctx.ctx, 
+		ctx.ctx,
 		uintptr(timeout),
 		uintptr(unsafe.Pointer(&crs[0])),
 		uintptr(len(crs)))
@@ -215,7 +215,7 @@ func (card *Card) Disconnect(d Disposition) error {
 
 // wraps SCardReconnect
 func (card *Card) Reconnect(mode ShareMode, protocol Protocol, init Disposition) error {
-	r, _, _ := procReconnect.Call(card.handle, uintptr(protocol), uintptr(init));
+	r, _, _ := procReconnect.Call(card.handle, uintptr(protocol), uintptr(init))
 	if scardError(r) != S_SUCCESS {
 		return scardError(r)
 	}
@@ -272,7 +272,7 @@ func (card *Card) Status() (*CardStatus, error) {
 
 // wraps SCardTransmit
 func (card *Card) Transmit(cmd []byte) ([]byte, error) {
-	var sendpci uintptr 
+	var sendpci uintptr
 
 	switch Protocol(card.activeProtocol) {
 	case PROTOCOL_T0:
