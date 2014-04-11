@@ -20,6 +20,7 @@ var (
 	procBeginTransaction = modwinscard.NewProc("SCardBeginTransaction")
 	procEndTransaction   = modwinscard.NewProc("SCardEndTransaction")
 	procStatus           = modwinscard.NewProc("SCardStatusW")
+	procTransmit         = modwinscard.NewProc("SCardTransmit")
 	procGetAttrib        = modwinscard.NewProc("SCardGetAttrib")
 
 	dataT0Pci = modwinscard.NewProc("g_rgSCardT0Pci")
@@ -271,7 +272,35 @@ func (card *Card) Status() (*CardStatus, error) {
 
 // wraps SCardTransmit
 func (card *Card) Transmit(cmd []byte) ([]byte, error) {
-	panic("scard: not implemented") // TODO
+	var sendpci uintptr 
+
+	switch Protocol(card.activeProtocol) {
+	case PROTOCOL_T0:
+		sendpci = scardIoReqT0
+	case PROTOCOL_T1:
+		sendpci = scardIoReqT1
+	default:
+		panic("unknown protocol")
+	}
+
+	var recv [MAX_BUFFER_SIZE_EXTENDED]byte
+	var recvlen = uint32(len(recv))
+
+	r, _, _ := procTransmit.Call(card.handle,
+		sendpci,
+		uintptr(unsafe.Pointer(&cmd[0])),
+		uintptr(len(cmd)),
+		0,
+		uintptr(unsafe.Pointer(&recv[0])),
+		uintptr(unsafe.Pointer(&recvlen)))
+	if scardError(r) != S_SUCCESS {
+		return nil, scardError(r)
+	}
+
+	rsp := make([]byte, recvlen)
+	copy(rsp, recv[0:recvlen])
+
+	return rsp, nil
 }
 
 // wraps SCardControl
