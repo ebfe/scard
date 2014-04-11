@@ -23,13 +23,16 @@ type Context struct {
 }
 
 type Card struct {
-	handle uintptr
+	handle         uintptr
 	activeProtocol uintptr
 }
 
+type scardError uintptr
+
 func (e scardError) Error() string {
 	//return "scard: " + C.GoString(C.pcsc_stringify_error(C.LONG(e)))
-	return fmt.Sprintf("scard: error code %x", e)
+	err := syscall.Errno(e)
+	return fmt.Sprintf("scard: error code %x: %s", uintptr(e), err.Error())
 }
 
 // wraps SCardEstablishContext

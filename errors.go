@@ -1,7 +1,5 @@
 package scard
 
-type scardError uint32
-
 const (
 	S_SUCCESS                 scardError = 0x00000000
 	F_INTERNAL_ERROR          scardError = 0x80100001

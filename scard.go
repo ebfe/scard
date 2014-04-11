@@ -17,6 +17,8 @@ import (
 	"unsafe"
 )
 
+type scardError uint32
+
 func (e scardError) Error() string {
 	return "scard: " + C.GoString(C.pcsc_stringify_error(C.LONG(e)))
 }
@@ -74,7 +76,7 @@ func (ctx *Context) Cancel() error {
 func (ctx *Context) Release() error {
 	r := C.SCardReleaseContext(ctx.ctx)
 	if r != C.SCARD_S_SUCCESS {
-		return scardError(r) 
+		return scardError(r)
 	}
 	return nil
 }
@@ -180,7 +182,7 @@ func (ctx *Context) Connect(reader string, mode ShareMode, proto Protocol) (*Car
 func (card *Card) Disconnect(d Disposition) error {
 	r := C.SCardDisconnect(card.handle, C.DWORD(d))
 	if r != C.SCARD_S_SUCCESS {
-		return scardError(r) 
+		return scardError(r)
 	}
 	return nil
 }
