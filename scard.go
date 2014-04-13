@@ -303,7 +303,7 @@ func (card *Card) Control(ctrl uint32, cmd []byte) ([]byte, error) {
 }
 
 // wraps SCardGetAttrib
-func (card *Card) GetAttrib(id uint32) ([]byte, error) {
+func (card *Card) GetAttrib(id Attrib) ([]byte, error) {
 	var needed C.DWORD
 
 	r := C.SCardGetAttrib(card.handle, C.DWORD(id), nil, &needed)
@@ -322,7 +322,7 @@ func (card *Card) GetAttrib(id uint32) ([]byte, error) {
 }
 
 // wraps SCardSetAttrib
-func (card *Card) SetAttrib(id uint32, data []byte) error {
+func (card *Card) SetAttrib(id Attrib, data []byte) error {
 	r := C.SCardSetAttrib(card.handle, C.DWORD(id), (*C.BYTE)(&data[0]), C.DWORD(len(data)))
 	if r != C.SCARD_S_SUCCESS {
 		return scardError(r)

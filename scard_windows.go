@@ -378,7 +378,7 @@ func (card *Card) Control(ctrl uint32, cmd []byte) ([]byte, error) {
 }
 
 // wraps SCardGetAttrib
-func (card *Card) GetAttrib(id uint32) ([]byte, error) {
+func (card *Card) GetAttrib(id Attrib) ([]byte, error) {
 	var needed uintptr
 
 	r, _, _ := procGetAttrib.Call(
@@ -405,7 +405,7 @@ func (card *Card) GetAttrib(id uint32) ([]byte, error) {
 }
 
 // wraps SCardSetAttrib
-func (card *Card) SetAttrib(id uint32, data []byte) error {
+func (card *Card) SetAttrib(id Attrib, data []byte) error {
 	r, _, _ := procSetAttrib.Call(
 		card.handle,
 		uintptr(id),
