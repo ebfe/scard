@@ -181,7 +181,7 @@ func (ctx *Context) ListReaderGroups() ([]string, error) {
 	return groups, nil
 }
 
-type _SCARD_READERSTATE struct {
+type scardReaderState struct {
 	szReader       uintptr
 	pvUserData     uintptr
 	dwCurrentState uint32
@@ -203,7 +203,7 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 		dwTimeout = uint32(timeout / time.Millisecond)
 	}
 
-	crs := make([]_SCARD_READERSTATE, len(readerStates))
+	crs := make([]scardReaderState, len(readerStates))
 
 	for i := range readerStates {
 		rptr, err := syscall.UTF16PtrFromString(readerStates[i].Reader)

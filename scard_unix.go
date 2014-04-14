@@ -274,7 +274,7 @@ func (card *Card) Transmit(cmd []byte) ([]byte, error) {
 	sendpci.cbPciLength = C.sizeof_SCARD_IO_REQUEST
 
 	var recv [maxBufferSizeExtended]byte
-	var recvlen C.DWORD = C.DWORD(len(recv))
+	var recvlen = C.DWORD(len(recv))
 
 	r := C.SCardTransmit(card.handle, &sendpci, (*C.BYTE)(&cmd[0]), C.DWORD(len(cmd)), &recvpci, (*C.BYTE)(&recv[0]), &recvlen)
 	if r != C.SCARD_S_SUCCESS {
