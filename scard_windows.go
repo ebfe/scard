@@ -67,7 +67,7 @@ func EstablishContext() (*Context, error) {
 	var ctx Context
 
 	r, _, _ := procEstablishContext.Call(2, uintptr(0), uintptr(0), uintptr(unsafe.Pointer(&ctx.ctx)))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return nil, scardError(r)
 	}
 
@@ -77,7 +77,7 @@ func EstablishContext() (*Context, error) {
 // wraps SCardIsValidContext
 func (ctx *Context) IsValid() (bool, error) {
 	r, _, _ := procIsValid.Call(ctx.ctx)
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return false, scardError(r)
 	}
 	return true, nil
@@ -86,7 +86,7 @@ func (ctx *Context) IsValid() (bool, error) {
 // wraps SCardCancel
 func (ctx *Context) Cancel() error {
 	r, _, _ := procCancel.Call(ctx.ctx)
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return scardError(r)
 	}
 	return nil
@@ -95,7 +95,7 @@ func (ctx *Context) Cancel() error {
 // wraps SCardReleaseContext
 func (ctx *Context) Release() error {
 	r, _, _ := procRelease.Call(uintptr(ctx.ctx))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return scardError(r)
 	}
 	return nil
@@ -110,7 +110,7 @@ func (ctx *Context) ListReaders() ([]string, error) {
 		0,
 		0,
 		uintptr(unsafe.Pointer(&needed)))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return nil, scardError(r)
 	}
 
@@ -120,7 +120,7 @@ func (ctx *Context) ListReaders() ([]string, error) {
 		0,
 		uintptr(unsafe.Pointer(&data[0])),
 		uintptr(unsafe.Pointer(&needed)))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return nil, scardError(r)
 	}
 
@@ -150,7 +150,7 @@ func (ctx *Context) ListReaderGroups() ([]string, error) {
 		ctx.ctx,
 		0,
 		uintptr(unsafe.Pointer(&needed)))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return nil, scardError(r)
 	}
 
@@ -159,7 +159,7 @@ func (ctx *Context) ListReaderGroups() ([]string, error) {
 		ctx.ctx,
 		uintptr(unsafe.Pointer(&data[0])),
 		uintptr(unsafe.Pointer(&needed)))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return nil, scardError(r)
 	}
 
@@ -192,6 +192,7 @@ type _SCARD_READERSTATE struct {
 
 // wraps SCardGetStatusChange
 func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Duration) error {
+	var dwTimeout uint32
 
 	switch {
 	case timeout < 0:
@@ -219,7 +220,7 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 		uintptr(unsafe.Pointer(&crs[0])),
 		uintptr(len(crs)))
 
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return scardError(r)
 	}
 
@@ -247,7 +248,7 @@ func (ctx *Context) Connect(reader string, mode ShareMode, proto Protocol) (*Car
 		uintptr(unsafe.Pointer(&card.handle)),
 		uintptr(unsafe.Pointer(&card.activeProtocol)))
 
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return nil, scardError(r)
 	}
 
@@ -257,7 +258,7 @@ func (ctx *Context) Connect(reader string, mode ShareMode, proto Protocol) (*Car
 // wraps SCardDisconnect
 func (card *Card) Disconnect(d Disposition) error {
 	r, _, _ := procDisconnect.Call(card.handle, uintptr(d))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return scardError(r)
 	}
 	return nil
@@ -266,7 +267,7 @@ func (card *Card) Disconnect(d Disposition) error {
 // wraps SCardReconnect
 func (card *Card) Reconnect(mode ShareMode, protocol Protocol, init Disposition) error {
 	r, _, _ := procReconnect.Call(card.handle, uintptr(protocol), uintptr(init))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return scardError(r)
 	}
 	return nil
@@ -275,7 +276,7 @@ func (card *Card) Reconnect(mode ShareMode, protocol Protocol, init Disposition)
 // wraps SCardBeginTransaction
 func (card *Card) BeginTransaction() error {
 	r, _, _ := procBeginTransaction.Call(card.handle)
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return scardError(r)
 	}
 	return nil
@@ -284,7 +285,7 @@ func (card *Card) BeginTransaction() error {
 // wraps SCardEndTransaction
 func (card *Card) EndTransaction(d Disposition) error {
 	r, _, _ := procEndTransaction.Call(card.handle, uintptr(d))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return scardError(r)
 	}
 	return nil
@@ -292,10 +293,10 @@ func (card *Card) EndTransaction(d Disposition) error {
 
 // wraps SCardStatus
 func (card *Card) Status() (*CardStatus, error) {
-	var reader [MAX_READERNAME + 1]uint16
+	var reader [maxReadername + 1]uint16
 	var readerLen = uint32(len(reader))
 	var state, proto uint32
-	var atr [MAX_ATR_SIZE]byte
+	var atr [maxAtrSize]byte
 	var atrLen = uint32(len(atr))
 
 	r, _, _ := procStatus.Call(
@@ -306,7 +307,7 @@ func (card *Card) Status() (*CardStatus, error) {
 		uintptr(unsafe.Pointer(&proto)),
 		uintptr(unsafe.Pointer(&atr[0])),
 		uintptr(unsafe.Pointer(&atrLen)))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return nil, scardError(r)
 	}
 
@@ -325,15 +326,15 @@ func (card *Card) Transmit(cmd []byte) ([]byte, error) {
 	var sendpci uintptr
 
 	switch Protocol(card.activeProtocol) {
-	case PROTOCOL_T0:
+	case ProtocolT0:
 		sendpci = scardIoReqT0
-	case PROTOCOL_T1:
+	case ProtocolT1:
 		sendpci = scardIoReqT1
 	default:
 		panic("unknown protocol")
 	}
 
-	var recv [MAX_BUFFER_SIZE_EXTENDED]byte
+	var recv [maxBufferSizeExtended]byte
 	var recvlen = uint32(len(recv))
 
 	r, _, _ := procTransmit.Call(card.handle,
@@ -343,7 +344,7 @@ func (card *Card) Transmit(cmd []byte) ([]byte, error) {
 		0,
 		uintptr(unsafe.Pointer(&recv[0])),
 		uintptr(unsafe.Pointer(&recvlen)))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return nil, scardError(r)
 	}
 
@@ -378,7 +379,7 @@ func (card *Card) Control(ctrl uint32, cmd []byte) ([]byte, error) {
 			uintptr(len(recv)),
 			uintptr(unsafe.Pointer(&recvlen)))
 	}
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return nil, scardError(r)
 	}
 
@@ -397,7 +398,7 @@ func (card *Card) GetAttrib(id Attrib) ([]byte, error) {
 		uintptr(id),
 		0,
 		uintptr(unsafe.Pointer(&needed)))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return nil, scardError(r)
 	}
 
@@ -408,7 +409,7 @@ func (card *Card) GetAttrib(id Attrib) ([]byte, error) {
 		uintptr(id),
 		uintptr(unsafe.Pointer(&attrib[0])),
 		uintptr(unsafe.Pointer(&needed)))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return nil, scardError(r)
 	}
 
@@ -422,7 +423,7 @@ func (card *Card) SetAttrib(id Attrib, data []byte) error {
 		uintptr(id),
 		uintptr(unsafe.Pointer(&data[0])),
 		uintptr(len(data)))
-	if scardError(r) != S_SUCCESS {
+	if scardError(r) != ErrSuccess {
 		return scardError(r)
 	}
 	return nil
