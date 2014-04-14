@@ -173,15 +173,13 @@ const (
 	STATE_UNPOWERED   StateFlag = C.SCARD_STATE_UNPOWERED
 )
 
-type Timeout uint32
-
-const (
-	INFINITE Timeout = C.INFINITE
-)
-
 const (
 	MAX_BUFFER_SIZE          = C.MAX_BUFFER_SIZE
 	MAX_BUFFER_SIZE_EXTENDED = C.MAX_BUFFER_SIZE_EXTENDED
 	MAX_READERNAME           = C.MAX_READERNAME
 	MAX_ATR_SIZE             = C.MAX_ATR_SIZE
+)
+
+const (
+	infiniteTimeout          = C.INFINITE
 )

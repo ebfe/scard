@@ -14,6 +14,7 @@ import "C"
 
 import (
 	"bytes"
+	"time"
 	"unsafe"
 )
 
@@ -136,7 +137,18 @@ func (ctx *Context) ListReaderGroups() ([]string, error) {
 }
 
 // wraps SCardGetStatusChange
-func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout Timeout) error {
+func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Duration) error {
+
+	var dwTimeout uint32
+
+	switch {
+	case timeout < 0:
+		dwTimeout = infiniteTimeout
+	case timeout > time.Duration(infiniteTimeout) * time.Millisecond:
+		dwTimeout = infiniteTimeout-1
+	default:
+		dwTimeout = uint32(timeout / time.Millisecond)
+	}
 
 	crs := make([]C.SCARD_READERSTATE, len(readerStates))
 
@@ -146,7 +158,7 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout Timeout)
 		crs[i].dwCurrentState = C.DWORD(readerStates[i].CurrentState)
 	}
 
-	r := C.SCardGetStatusChange(ctx.ctx, C.DWORD(timeout),
+	r := C.SCardGetStatusChange(ctx.ctx, C.DWORD(dwTimeout),
 		(C.LPSCARD_READERSTATE)(unsafe.Pointer(&crs[0])),
 		C.DWORD(len(crs)))
 

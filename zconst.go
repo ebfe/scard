@@ -1,5 +1,5 @@
 // Created by cgo -godefs - DO NOT EDIT
-// cgo -godefs -- -I/usr/include/PCSC/ const.go
+// cgo -godefs -- -I/usr/include/PCSC const.go
 
 package scard
 
@@ -168,13 +168,8 @@ const (
 	STATE_UNPOWERED   StateFlag = 0x400
 )
 
-type Timeout uint32
-
 const (
-	INFINITE Timeout = 0xffffffff
-)
-
-const (
+	infiniteTimeout          = 0xffffffff
 	MAX_BUFFER_SIZE          = 0x108
 	MAX_BUFFER_SIZE_EXTENDED = 0x1000c
 	MAX_READERNAME           = 0x80

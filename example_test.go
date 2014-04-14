@@ -24,7 +24,7 @@ func waitUntilCardPresent(ctx *scard.Context, readers []string) (int, error) {
 				return i, nil
 			}
 		}
-		err := ctx.GetStatusChange(rs, scard.INFINITE)
+		err := ctx.GetStatusChange(rs, -1)
 		if err != nil {
 			return -1, err
 		}
