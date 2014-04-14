@@ -1,4 +1,4 @@
-// +build ignore 
+// +build ignore
 
 package scard
 
@@ -122,7 +122,7 @@ type Protocol uint32
 
 const (
 	PROTOCOL_UNDEFINED Protocol = C.SCARD_PROTOCOL_UNDEFINED
-	PROTOCOL_T0        Protocol = C.SCARD_PROTOCOL_T0 
+	PROTOCOL_T0        Protocol = C.SCARD_PROTOCOL_T0
 	PROTOCOL_T1        Protocol = C.SCARD_PROTOCOL_T1
 	PROTOCOL_ANY       Protocol = PROTOCOL_T0 | PROTOCOL_T1
 )
@@ -185,5 +185,3 @@ const (
 	MAX_READERNAME           = C.MAX_READERNAME
 	MAX_ATR_SIZE             = C.MAX_ATR_SIZE
 )
-
-
