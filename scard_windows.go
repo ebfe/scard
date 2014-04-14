@@ -212,10 +212,8 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 		}
 		crs[i].szReader = uintptr(unsafe.Pointer(rptr))
 		crs[i].dwCurrentState = uint32(readerStates[i].CurrentState)
-		crs[i].cbAtr = C.DWORD(len(readerStates[i].Atr))
-		for j, b := range readerStates[i].Atr {
-			crs[i].rgbAtr[j] = C.uchar(b)
-		}
+		crs[i].cbAtr = uint32(len(readerStates[i].Atr))
+		copy(crs[i].rgbAtr[:], readerStates[i].Atr)
 	}
 
 	r, _, _ := procGetStatusChange.Call(
@@ -232,11 +230,7 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 		readerStates[i].EventState = StateFlag(crs[i].dwEventState)
 		if crs[i].cbAtr > 0 {
 			readerStates[i].Atr = make([]byte, int(crs[i].cbAtr))
-			for j := C.DWORD(0); j < crs[i].cbAtr; j++ {
-				readerStates[i].Atr[j] = byte(crs[i].rgbAtr[j])
-			}
-		} else {
-			readerStates[i].Atr = nil
+			copy(readerStates[i].Atr, crs[i].rgbAtr[:crs[i].cbAtr])
 		}
 	}
 

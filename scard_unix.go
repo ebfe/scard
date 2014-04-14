@@ -174,8 +174,6 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 			for j := C.DWORD(0); j < crs[i].cbAtr; j++ {
 				readerStates[i].Atr[j] = byte(crs[i].rgbAtr[j])
 			}
-		} else {
-			readerStates[i].Atr = nil
 		}
 	}
 
