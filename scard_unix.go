@@ -153,6 +153,10 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 		crs[i].szReader = C.CString(readerStates[i].Reader)
 		defer C.free(unsafe.Pointer(crs[i].szReader))
 		crs[i].dwCurrentState = C.DWORD(readerStates[i].CurrentState)
+		crs[i].cbAtr = C.DWORD(len(readerStates[i].Atr))
+		for j, b := range readerStates[i].Atr {
+			crs[i].rgbAtr[j] = C.uchar(b)
+		}
 	}
 
 	r := C.SCardGetStatusChange(ctx.ctx, C.DWORD(dwTimeout),
@@ -165,6 +169,14 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 
 	for i := range readerStates {
 		readerStates[i].EventState = StateFlag(crs[i].dwEventState)
+		if crs[i].cbAtr > 0 {
+			readerStates[i].Atr = make([]byte, int(crs[i].cbAtr))
+			for j := C.DWORD(0); j < crs[i].cbAtr; j++ {
+				readerStates[i].Atr[j] = byte(crs[i].rgbAtr[j])
+			}
+		} else {
+			readerStates[i].Atr = nil
+		}
 	}
 
 	return nil
@@ -233,7 +245,7 @@ func (card *Card) Status() (*CardStatus, error) {
 	var readerBuf [C.MAX_READERNAME + 1]byte
 	var readerLen = C.DWORD(len(readerBuf))
 	var state, proto C.DWORD
-	var atr [C.MAX_ATR_SIZE]byte
+	var atr [maxAtrSize]byte
 	var atrLen = C.DWORD(len(atr))
 
 	r := C.SCardStatus(card.handle, (C.LPSTR)(unsafe.Pointer(&readerBuf[0])), &readerLen, &state, &proto, (*C.BYTE)(&atr[0]), &atrLen)
@@ -251,7 +263,7 @@ func (card *Card) Status() (*CardStatus, error) {
 		Reader:         string(reader),
 		State:          State(state),
 		ActiveProtocol: Protocol(proto),
-		ATR:            atr[0:atrLen],
+		Atr:            atr[0:atrLen],
 	}
 
 	return status, nil

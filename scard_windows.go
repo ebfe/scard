@@ -212,6 +212,10 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 		}
 		crs[i].szReader = uintptr(unsafe.Pointer(rptr))
 		crs[i].dwCurrentState = uint32(readerStates[i].CurrentState)
+		crs[i].cbAtr = C.DWORD(len(readerStates[i].Atr))
+		for j, b := range readerStates[i].Atr {
+			crs[i].rgbAtr[j] = C.uchar(b)
+		}
 	}
 
 	r, _, _ := procGetStatusChange.Call(
@@ -226,6 +230,14 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 
 	for i := range readerStates {
 		readerStates[i].EventState = StateFlag(crs[i].dwEventState)
+		if crs[i].cbAtr > 0 {
+			readerStates[i].Atr = make([]byte, int(crs[i].cbAtr))
+			for j := C.DWORD(0); j < crs[i].cbAtr; j++ {
+				readerStates[i].Atr[j] = byte(crs[i].rgbAtr[j])
+			}
+		} else {
+			readerStates[i].Atr = nil
+		}
 	}
 
 	return nil
@@ -315,7 +327,7 @@ func (card *Card) Status() (*CardStatus, error) {
 		Reader:         syscall.UTF16ToString(reader[0:readerLen]),
 		State:          State(state),
 		ActiveProtocol: Protocol(proto),
-		ATR:            atr[0:atrLen],
+		Atr:            atr[0:atrLen],
 	}
 
 	return status, nil
