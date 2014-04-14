@@ -197,8 +197,8 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 	switch {
 	case timeout < 0:
 		dwTimeout = infiniteTimeout
-	case timeout > time.Duration(infiniteTimeout) * time.Millisecond:
-		dwTimeout = infiniteTimeout-1
+	case timeout > time.Duration(infiniteTimeout)*time.Millisecond:
+		dwTimeout = infiniteTimeout - 1
 	default:
 		dwTimeout = uint32(timeout / time.Millisecond)
 	}
