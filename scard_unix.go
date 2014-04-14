@@ -117,17 +117,7 @@ func (ctx *Context) ListReaderGroups() ([]string, error) {
 // wraps SCardGetStatusChange
 func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Duration) error {
 
-	var dwTimeout uint32
-
-	switch {
-	case timeout < 0:
-		dwTimeout = infiniteTimeout
-	case timeout > time.Duration(infiniteTimeout)*time.Millisecond:
-		dwTimeout = infiniteTimeout - 1
-	default:
-		dwTimeout = uint32(timeout / time.Millisecond)
-	}
-
+	dwTimeout := durationToTimeout(timeout)
 	crs := make([]C.SCARD_READERSTATE, len(readerStates))
 
 	for i := range readerStates {

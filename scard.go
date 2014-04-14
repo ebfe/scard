@@ -2,6 +2,7 @@
 package scard
 
 import (
+	"time"
 	"unsafe"
 )
 
@@ -18,6 +19,17 @@ type ReaderState struct {
 	CurrentState StateFlag
 	EventState   StateFlag
 	Atr          []byte
+}
+
+func durationToTimeout(timeout time.Duration) uint32 {
+	switch {
+	case timeout < 0:
+		return infiniteTimeout
+	case timeout > time.Duration(infiniteTimeout)*time.Millisecond:
+		return infiniteTimeout-1
+	default:
+		return uint32(timeout / time.Millisecond)
+	}
 }
 
 func (buf strbuf) ptr() unsafe.Pointer {
