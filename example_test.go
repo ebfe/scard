@@ -2,7 +2,7 @@ package scard_test
 
 import (
 	"fmt"
-	"github.com/ebfe/go.pcsclite/scard"
+	"github.com/ebfe/scard"
 	"os"
 )
 
