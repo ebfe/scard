@@ -1,11 +1,8 @@
 // +build !windows
 
-// pcsclite binding
-//
-// http://pcsclite.alioth.debian.org/pcsclite.html
-// http://pcsclite.alioth.debian.org/api/group__API.html
-//
 package scard
+
+// BUG(mg): Does not work on darwin. (older/different libpcsclite?)
 
 // #cgo pkg-config: libpcsclite
 // #include <stdlib.h>

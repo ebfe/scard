@@ -1,4 +1,6 @@
+// Package scard provides bindings to the PC/SC API.
 package scard
+
 
 type CardStatus struct {
 	Reader         string
