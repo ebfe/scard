@@ -6,172 +6,175 @@ package scard
 type Attrib uint32
 
 const (
-	ATTR_VENDOR_NAME              Attrib = 0x10100
-	ATTR_VENDOR_IFD_TYPE          Attrib = 0x10101
-	ATTR_VENDOR_IFD_VERSION       Attrib = 0x10102
-	ATTR_VENDOR_IFD_SERIAL_NO     Attrib = 0x10103
-	ATTR_CHANNEL_ID               Attrib = 0x20110
-	ATTR_ASYNC_PROTOCOL_TYPES     Attrib = 0x30120
-	ATTR_DEFAULT_CLK              Attrib = 0x30121
-	ATTR_MAX_CLK                  Attrib = 0x30122
-	ATTR_DEFAULT_DATA_RATE        Attrib = 0x30123
-	ATTR_MAX_DATA_RATE            Attrib = 0x30124
-	ATTR_MAX_IFSD                 Attrib = 0x30125
-	ATTR_SYNC_PROTOCOL_TYPES      Attrib = 0x30126
-	ATTR_POWER_MGMT_SUPPORT       Attrib = 0x40131
-	ATTR_USER_TO_CARD_AUTH_DEVICE Attrib = 0x50140
-	ATTR_USER_AUTH_INPUT_DEVICE   Attrib = 0x50142
-	ATTR_CHARACTERISTICS          Attrib = 0x60150
-	ATTR_CURRENT_PROTOCOL_TYPE    Attrib = 0x80201
-	ATTR_CURRENT_CLK              Attrib = 0x80202
-	ATTR_CURRENT_F                Attrib = 0x80203
-	ATTR_CURRENT_D                Attrib = 0x80204
-	ATTR_CURRENT_N                Attrib = 0x80205
-	ATTR_CURRENT_W                Attrib = 0x80206
-	ATTR_CURRENT_IFSC             Attrib = 0x80207
-	ATTR_CURRENT_IFSD             Attrib = 0x80208
-	ATTR_CURRENT_BWT              Attrib = 0x80209
-	ATTR_CURRENT_CWT              Attrib = 0x8020a
-	ATTR_CURRENT_EBC_ENCODING     Attrib = 0x8020b
-	ATTR_EXTENDED_BWT             Attrib = 0x8020c
-	ATTR_ICC_PRESENCE             Attrib = 0x90300
-	ATTR_ICC_INTERFACE_STATUS     Attrib = 0x90301
-	ATTR_CURRENT_IO_STATE         Attrib = 0x90302
-	ATTR_ATR_STRING               Attrib = 0x90303
-	ATTR_ICC_TYPE_PER_ATR         Attrib = 0x90304
-	ATTR_ESC_RESET                Attrib = 0x7a000
-	ATTR_ESC_CANCEL               Attrib = 0x7a003
-	ATTR_ESC_AUTHREQUEST          Attrib = 0x7a005
-	ATTR_MAXINPUT                 Attrib = 0x7a007
-	ATTR_DEVICE_UNIT              Attrib = 0x7fff0001
-	ATTR_DEVICE_IN_USE            Attrib = 0x7fff0002
-	ATTR_DEVICE_FRIENDLY_NAME     Attrib = 0x7fff0003
-	ATTR_DEVICE_SYSTEM_NAME       Attrib = 0x7fff0004
-	ATTR_SUPRESS_T1_IFS_REQUEST   Attrib = 0x7fff0007
+	AttrVendorName           Attrib = 0x10100
+	AttrVendorIfdType        Attrib = 0x10101
+	AttrVendorIfdVersion     Attrib = 0x10102
+	AttrVendorIfdSerialNo    Attrib = 0x10103
+	AttrChannelId            Attrib = 0x20110
+	AttrAsyncProtocolTypes   Attrib = 0x30120
+	AttrDefaultClk           Attrib = 0x30121
+	AttrMaxClk               Attrib = 0x30122
+	AttrDefaultDataRate      Attrib = 0x30123
+	AttrMaxDataRate          Attrib = 0x30124
+	AttrMaxIfsd              Attrib = 0x30125
+	AttrSyncProtocolTypes    Attrib = 0x30126
+	AttrPowerMgmtSupport     Attrib = 0x40131
+	AttrUserToCardAuthDevice Attrib = 0x50140
+	AttrUserAuthInputDevice  Attrib = 0x50142
+	AttrCharacteristics      Attrib = 0x60150
+	AttrCurrentProtocolType  Attrib = 0x80201
+	AttrCurrentClk           Attrib = 0x80202
+	AttrCurrentF             Attrib = 0x80203
+	AttrCurrentD             Attrib = 0x80204
+	AttrCurrentN             Attrib = 0x80205
+	AttrCurrentW             Attrib = 0x80206
+	AttrCurrentIfsc          Attrib = 0x80207
+	AttrCurrentIfsd          Attrib = 0x80208
+	AttrCurrentBwt           Attrib = 0x80209
+	AttrCurrentCwt           Attrib = 0x8020a
+	AttrCurrentEbcEncoding   Attrib = 0x8020b
+	AttrExtendedBwt          Attrib = 0x8020c
+	AttrIccPresence          Attrib = 0x90300
+	AttrIccInterfaceStatus   Attrib = 0x90301
+	AttrCurrentIoState       Attrib = 0x90302
+	AttrAtrString            Attrib = 0x90303
+	AttrIccTypePerAtr        Attrib = 0x90304
+	AttrEscReset             Attrib = 0x7a000
+	AttrEscCancel            Attrib = 0x7a003
+	AttrEscAuthrequest       Attrib = 0x7a005
+	AttrMaxinput             Attrib = 0x7a007
+	AttrDeviceUnit           Attrib = 0x7fff0001
+	AttrDeviceInUse          Attrib = 0x7fff0002
+	AttrDeviceFriendlyName   Attrib = 0x7fff0003
+	AttrDeviceSystemName     Attrib = 0x7fff0004
+	AttrSupressT1IfsRequest  Attrib = 0x7fff0007
 )
 
 const (
-	S_SUCCESS                 = scardError(0x0)
-	F_INTERNAL_ERROR          = scardError(0x80100001)
-	E_CANCELLED               = scardError(0x80100002)
-	E_INVALID_HANDLE          = scardError(0x80100003)
-	E_INVALID_PARAMETER       = scardError(0x80100004)
-	E_INVALID_TARGET          = scardError(0x80100005)
-	E_NO_MEMORY               = scardError(0x80100006)
-	F_WAITED_TOO_LONG         = scardError(0x80100007)
-	E_INSUFFICIENT_BUFFER     = scardError(0x80100008)
-	E_UNKNOWN_READER          = scardError(0x80100009)
-	E_TIMEOUT                 = scardError(0x8010000a)
-	E_SHARING_VIOLATION       = scardError(0x8010000b)
-	E_NO_SMARTCARD            = scardError(0x8010000c)
-	E_UNKNOWN_CARD            = scardError(0x8010000d)
-	E_CANT_DISPOSE            = scardError(0x8010000e)
-	E_PROTO_MISMATCH          = scardError(0x8010000f)
-	E_NOT_READY               = scardError(0x80100010)
-	E_INVALID_VALUE           = scardError(0x80100011)
-	E_SYSTEM_CANCELLED        = scardError(0x80100012)
-	F_COMM_ERROR              = scardError(0x80100013)
-	F_UNKNOWN_ERROR           = scardError(0x80100014)
-	E_INVALID_ATR             = scardError(0x80100015)
-	E_NOT_TRANSACTED          = scardError(0x80100016)
-	E_READER_UNAVAILABLE      = scardError(0x80100017)
-	P_SHUTDOWN                = scardError(0x80100018)
-	E_PCI_TOO_SMALL           = scardError(0x80100019)
-	E_READER_UNSUPPORTED      = scardError(0x8010001a)
-	E_DUPLICATE_READER        = scardError(0x8010001b)
-	E_CARD_UNSUPPORTED        = scardError(0x8010001c)
-	E_NO_SERVICE              = scardError(0x8010001d)
-	E_SERVICE_STOPPED         = scardError(0x8010001e)
-	E_UNEXPECTED              = scardError(0x8010001f)
-	E_UNSUPPORTED_FEATURE     = scardError(0x8010001f)
-	E_ICC_INSTALLATION        = scardError(0x80100020)
-	E_ICC_CREATEORDER         = scardError(0x80100021)
-	E_FILE_NOT_FOUND          = scardError(0x80100024)
-	E_NO_DIR                  = scardError(0x80100025)
-	E_NO_FILE                 = scardError(0x80100026)
-	E_NO_ACCESS               = scardError(0x80100027)
-	E_WRITE_TOO_MANY          = scardError(0x80100028)
-	E_BAD_SEEK                = scardError(0x80100029)
-	E_INVALID_CHV             = scardError(0x8010002a)
-	E_UNKNOWN_RES_MNG         = scardError(0x8010002b)
-	E_NO_SUCH_CERTIFICATE     = scardError(0x8010002c)
-	E_CERTIFICATE_UNAVAILABLE = scardError(0x8010002d)
-	E_NO_READERS_AVAILABLE    = scardError(0x8010002e)
-	E_COMM_DATA_LOST          = scardError(0x8010002f)
-	E_NO_KEY_CONTAINER        = scardError(0x80100030)
-	E_SERVER_TOO_BUSY         = scardError(0x80100031)
-	W_UNSUPPORTED_CARD        = scardError(0x80100065)
-	W_UNRESPONSIVE_CARD       = scardError(0x80100066)
-	W_UNPOWERED_CARD          = scardError(0x80100067)
-	W_RESET_CARD              = scardError(0x80100068)
-	W_REMOVED_CARD            = scardError(0x80100069)
-	W_SECURITY_VIOLATION      = scardError(0x8010006a)
-	W_WRONG_CHV               = scardError(0x8010006b)
-	W_CHV_BLOCKED             = scardError(0x8010006c)
-	W_EOF                     = scardError(0x8010006d)
-	W_CANCELLED_BY_USER       = scardError(0x8010006e)
-	W_CARD_NOT_AUTHENTICATED  = scardError(0x8010006f)
+	ErrSuccess                = scardError(0x0)
+	ErrInternalError          = scardError(0x80100001)
+	ErrCancelled              = scardError(0x80100002)
+	ErrInvalidHandle          = scardError(0x80100003)
+	ErrInvalidParameter       = scardError(0x80100004)
+	ErrInvalidTarget          = scardError(0x80100005)
+	ErrNoMemory               = scardError(0x80100006)
+	ErrWaitedTooLong          = scardError(0x80100007)
+	ErrInsufficientBuffer     = scardError(0x80100008)
+	ErrUnknownReader          = scardError(0x80100009)
+	ErrTimeout                = scardError(0x8010000a)
+	ErrSharingViolation       = scardError(0x8010000b)
+	ErrNoSmartcard            = scardError(0x8010000c)
+	ErrUnknownCard            = scardError(0x8010000d)
+	ErrCantDispose            = scardError(0x8010000e)
+	ErrProtoMismatch          = scardError(0x8010000f)
+	ErrNotReady               = scardError(0x80100010)
+	ErrInvalidValue           = scardError(0x80100011)
+	ErrSystemCancelled        = scardError(0x80100012)
+	ErrCommError              = scardError(0x80100013)
+	ErrUnknownError           = scardError(0x80100014)
+	ErrInvalidAtr             = scardError(0x80100015)
+	ErrNotTransacted          = scardError(0x80100016)
+	ErrReaderUnavailable      = scardError(0x80100017)
+	ErrShutdown               = scardError(0x80100018)
+	ErrPciTooSmall            = scardError(0x80100019)
+	ErrReaderUnsupported      = scardError(0x8010001a)
+	ErrDuplicateReader        = scardError(0x8010001b)
+	ErrCardUnsupported        = scardError(0x8010001c)
+	ErrNoService              = scardError(0x8010001d)
+	ErrServiceStopped         = scardError(0x8010001e)
+	ErrUnexpected             = scardError(0x8010001f)
+	ErrUnsupportedFeature     = scardError(0x8010001f)
+	ErrIccInstallation        = scardError(0x80100020)
+	ErrIccCreateorder         = scardError(0x80100021)
+	ErrFileNotFound           = scardError(0x80100024)
+	ErrNoDir                  = scardError(0x80100025)
+	ErrNoFile                 = scardError(0x80100026)
+	ErrNoAccess               = scardError(0x80100027)
+	ErrWriteTooMany           = scardError(0x80100028)
+	ErrBadSeek                = scardError(0x80100029)
+	ErrInvalidChv             = scardError(0x8010002a)
+	ErrUnknownResMng          = scardError(0x8010002b)
+	ErrNoSuchCertificate      = scardError(0x8010002c)
+	ErrCertificateUnavailable = scardError(0x8010002d)
+	ErrNoReadersAvailable     = scardError(0x8010002e)
+	ErrCommDataLost           = scardError(0x8010002f)
+	ErrNoKeyContainer         = scardError(0x80100030)
+	ErrServerTooBusy          = scardError(0x80100031)
+	ErrUnsupportedCard        = scardError(0x80100065)
+	ErrUnresponsiveCard       = scardError(0x80100066)
+	ErrUnpoweredCard          = scardError(0x80100067)
+	ErrResetCard              = scardError(0x80100068)
+	ErrRemovedCard            = scardError(0x80100069)
+	ErrSecurityViolation      = scardError(0x8010006a)
+	ErrWrongChv               = scardError(0x8010006b)
+	ErrChvBlocked             = scardError(0x8010006c)
+	ErrEof                    = scardError(0x8010006d)
+	ErrCancelledByUser        = scardError(0x8010006e)
+	ErrCardNotAuthenticated   = scardError(0x8010006f)
 )
 
 type Protocol uint32
 
 const (
-	PROTOCOL_UNDEFINED Protocol = 0x0
-	PROTOCOL_T0        Protocol = 0x1
-	PROTOCOL_T1        Protocol = 0x2
-	PROTOCOL_ANY       Protocol = PROTOCOL_T0 | PROTOCOL_T1
+	ProtocolUndefined Protocol = 0x0
+	ProtocolT0        Protocol = 0x1
+	ProtocolT1        Protocol = 0x2
+	ProtocolAny       Protocol = ProtocolT0 | ProtocolT1
 )
 
 type ShareMode uint32
 
 const (
-	SHARE_EXCLUSIVE ShareMode = 0x1
-	SHARE_SHARED    ShareMode = 0x2
-	SHARE_DIRECT    ShareMode = 0x3
+	ShareExclusive ShareMode = 0x1
+	ShareShared    ShareMode = 0x2
+	ShareDirect    ShareMode = 0x3
 )
 
 type Disposition uint32
 
 const (
-	LEAVE_CARD   Disposition = 0x0
-	RESET_CARD   Disposition = 0x1
-	UNPOWER_CARD Disposition = 0x2
-	EJECT_CARD   Disposition = 0x3
+	LeaveCard   Disposition = 0x0
+	ResetCard   Disposition = 0x1
+	UnpowerCard Disposition = 0x2
+	EjectCard   Disposition = 0x3
 )
 
 type State uint32
 
 const (
-	UNKNOWN    State = 0x1
-	ABSENT     State = 0x2
-	PRESENT    State = 0x4
-	SWALLOWED  State = 0x8
-	POWERED    State = 0x10
-	NEGOTIABLE State = 0x20
-	SPECIFIC   State = 0x40
+	Unknown    State = 0x1
+	Absent     State = 0x2
+	Present    State = 0x4
+	Swallowed  State = 0x8
+	Powered    State = 0x10
+	Negotiable State = 0x20
+	Specific   State = 0x40
 )
 
 type StateFlag uint32
 
 const (
-	STATE_UNAWARE     StateFlag = 0x0
-	STATE_IGNORE      StateFlag = 0x1
-	STATE_CHANGED     StateFlag = 0x2
-	STATE_UNKNOWN     StateFlag = 0x4
-	STATE_UNAVAILABLE StateFlag = 0x8
-	STATE_EMPTY       StateFlag = 0x10
-	STATE_PRESENT     StateFlag = 0x20
-	STATE_ATRMATCH    StateFlag = 0x40
-	STATE_EXCLUSIVE   StateFlag = 0x80
-	STATE_INUSE       StateFlag = 0x100
-	STATE_MUTE        StateFlag = 0x200
-	STATE_UNPOWERED   StateFlag = 0x400
+	StateUnaware     StateFlag = 0x0
+	StateIgnore      StateFlag = 0x1
+	StateChanged     StateFlag = 0x2
+	StateUnknown     StateFlag = 0x4
+	StateUnavailable StateFlag = 0x8
+	StateEmpty       StateFlag = 0x10
+	StatePresent     StateFlag = 0x20
+	StateAtrmatch    StateFlag = 0x40
+	StateExclusive   StateFlag = 0x80
+	StateInuse       StateFlag = 0x100
+	StateMute        StateFlag = 0x200
+	StateUnpowered   StateFlag = 0x400
 )
 
 const (
-	infiniteTimeout          = 0xffffffff
-	MAX_BUFFER_SIZE          = 0x108
-	MAX_BUFFER_SIZE_EXTENDED = 0x1000c
-	MAX_READERNAME           = 0x80
-	MAX_ATR_SIZE             = 0x21
+	maxBufferSize         = 0x108
+	maxBufferSizeExtended = 0x1000c
+	maxReadername         = 0x80
+	maxAtrSize            = 0x21
+)
+
+const (
+	infiniteTimeout = 0xffffffff
 )

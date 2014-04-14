@@ -144,8 +144,8 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 	switch {
 	case timeout < 0:
 		dwTimeout = infiniteTimeout
-	case timeout > time.Duration(infiniteTimeout) * time.Millisecond:
-		dwTimeout = infiniteTimeout-1
+	case timeout > time.Duration(infiniteTimeout)*time.Millisecond:
+		dwTimeout = infiniteTimeout - 1
 	default:
 		dwTimeout = uint32(timeout / time.Millisecond)
 	}
@@ -266,16 +266,14 @@ func (card *Card) Transmit(cmd []byte) ([]byte, error) {
 	var recvpci C.SCARD_IO_REQUEST
 
 	switch card.activeProtocol {
-	case PROTOCOL_T0:
-		sendpci.dwProtocol = C.SCARD_PROTOCOL_T0
-	case PROTOCOL_T1:
-		sendpci.dwProtocol = C.SCARD_PROTOCOL_T1
+	case ProtocolT0, ProtocolT1:
+		sendpci.dwProtocol = C.ulong(card.activeProtocol)
 	default:
 		panic("unknown protocol")
 	}
 	sendpci.cbPciLength = C.sizeof_SCARD_IO_REQUEST
 
-	var recv [C.MAX_BUFFER_SIZE_EXTENDED]byte
+	var recv [maxBufferSizeExtended]byte
 	var recvlen C.DWORD = C.DWORD(len(recv))
 
 	r := C.SCardTransmit(card.handle, &sendpci, (*C.BYTE)(&cmd[0]), C.DWORD(len(cmd)), &recvpci, (*C.BYTE)(&recv[0]), &recvlen)

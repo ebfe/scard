@@ -40,7 +40,7 @@ func setup(t *testing.T) *testCard {
 		t.SkipNow()
 	}
 
-	card, err = ctx.Connect(readers[0], SHARE_EXCLUSIVE, PROTOCOL_ANY)
+	card, err = ctx.Connect(readers[0], ShareExclusive, ProtocolAny)
 	if err != nil {
 		t.Skip("no smartcard found")
 		t.SkipNow()
@@ -50,7 +50,7 @@ func setup(t *testing.T) *testCard {
 
 func teardown(c *testCard) {
 	if c.card != nil {
-		c.card.Disconnect(LEAVE_CARD)
+		c.card.Disconnect(LeaveCard)
 	}
 
 	if c.ctx != nil {
@@ -136,14 +136,14 @@ func TestGetAttrib(t *testing.T) {
 	c := setup(t)
 	defer teardown(c)
 
-	atr, err := c.card.GetAttrib(ATTR_ATR_STRING)
+	atr, err := c.card.GetAttrib(AttrAtrString)
 	if err != nil {
 		t.Error(err)
 	} else {
 		t.Logf("ATTR_ATR_STRING: % x\n", atr)
 	}
 
-	vendor, err := c.card.GetAttrib(ATTR_VENDOR_NAME)
+	vendor, err := c.card.GetAttrib(AttrVendorName)
 	if err != nil {
 		t.Error(err)
 	} else {

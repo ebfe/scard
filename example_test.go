@@ -15,12 +15,12 @@ func waitUntilCardPresent(ctx *scard.Context, readers []string) (int, error) {
 	rs := make([]scard.ReaderState, len(readers))
 	for i := range rs {
 		rs[i].Reader = readers[i]
-		rs[i].CurrentState = scard.STATE_UNAWARE
+		rs[i].CurrentState = scard.StateUnaware
 	}
 
 	for {
 		for i := range rs {
-			if rs[i].EventState&scard.STATE_PRESENT != 0 {
+			if rs[i].EventState&scard.StatePresent != 0 {
 				return i, nil
 			}
 		}
@@ -63,11 +63,11 @@ func Example() {
 
 		// Connect to card
 		fmt.Println("Connecting to card in ", readers[index])
-		card, err := ctx.Connect(readers[index], scard.SHARE_EXCLUSIVE, scard.PROTOCOL_ANY)
+		card, err := ctx.Connect(readers[index], scard.ShareExclusive, scard.ProtocolAny)
 		if err != nil {
 			die(err)
 		}
-		defer card.Disconnect(scard.RESET_CARD)
+		defer card.Disconnect(scard.ResetCard)
 
 		fmt.Println("Card status:")
 		status, err := card.Status()
