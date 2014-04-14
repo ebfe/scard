@@ -112,32 +112,17 @@ func (ctx *Context) ListReaders() ([]string, error) {
 		return nil, Error(r)
 	}
 
-	data := make([]uint16, needed)
+	data := make(strbuf, needed)
 	r, _, _ = procListReaders.Call(
 		ctx.ctx,
 		0,
-		uintptr(unsafe.Pointer(&data[0])),
+		uintptr(data.ptr()),
 		uintptr(unsafe.Pointer(&needed)))
 	if Error(r) != ErrSuccess {
 		return nil, Error(r)
 	}
 
-	var readers []string
-	for len(data) > 0 {
-		pos := 0
-		for ; pos < len(data); pos++ {
-			if data[pos] == 0 {
-				break
-			}
-		}
-		if data[0] != 0 {
-			reader := syscall.UTF16ToString(data[:pos])
-			readers = append(readers, reader)
-		}
-		data = data[pos+1:]
-	}
-
-	return readers, nil
+	return decodemstr(data[:needed]), nil
 }
 
 // wraps SCardListReaderGroups
@@ -152,31 +137,16 @@ func (ctx *Context) ListReaderGroups() ([]string, error) {
 		return nil, Error(r)
 	}
 
-	data := make([]uint16, needed)
+	data := make(strbuf, needed)
 	r, _, _ = procListReaderGroups.Call(
 		ctx.ctx,
-		uintptr(unsafe.Pointer(&data[0])),
+		uintptr(data.ptr()),
 		uintptr(unsafe.Pointer(&needed)))
 	if Error(r) != ErrSuccess {
 		return nil, Error(r)
 	}
 
-	var groups []string
-	for len(data) > 0 {
-		pos := 0
-		for ; pos < len(data); pos++ {
-			if data[pos] == 0 {
-				break
-			}
-		}
-		if data[0] != 0 {
-			group := syscall.UTF16ToString(data[:pos])
-			groups = append(groups, group)
-		}
-		data = data[pos+1:]
-	}
-
-	return groups, nil
+	return decodemstr(data[:needed]), nil
 }
 
 type scardReaderState struct {
@@ -204,11 +174,11 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 	crs := make([]scardReaderState, len(readerStates))
 
 	for i := range readerStates {
-		rptr, err := syscall.UTF16PtrFromString(readerStates[i].Reader)
+		buf, err := encodestr(readerStates[i].Reader)
 		if err != nil {
 			return err
 		}
-		crs[i].szReader = uintptr(unsafe.Pointer(rptr))
+		crs[i].szReader = uintptr(buf.ptr())
 		crs[i].dwCurrentState = uint32(readerStates[i].CurrentState)
 		crs[i].cbAtr = uint32(len(readerStates[i].Atr))
 		copy(crs[i].rgbAtr[:], readerStates[i].Atr)
@@ -239,14 +209,14 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 func (ctx *Context) Connect(reader string, mode ShareMode, proto Protocol) (*Card, error) {
 	var card Card
 
-	creader, err := syscall.UTF16PtrFromString(reader)
+	creader, err := encodemstr(reader)
 	if err != nil {
 		return nil, err
 	}
 
 	r, _, _ := procConnect.Call(
 		ctx.ctx,
-		uintptr(unsafe.Pointer(creader)),
+		uintptr(creader.ptr()),
 		uintptr(mode),
 		uintptr(proto),
 		uintptr(unsafe.Pointer(&card.handle)),
@@ -297,15 +267,16 @@ func (card *Card) EndTransaction(d Disposition) error {
 
 // wraps SCardStatus
 func (card *Card) Status() (*CardStatus, error) {
-	var reader [maxReadername + 1]uint16
-	var readerLen = uint32(len(reader))
 	var state, proto uint32
 	var atr [maxAtrSize]byte
 	var atrLen = uint32(len(atr))
 
+	reader := make(strbuf, maxReadername+1)
+	readerLen := len(reader)
+
 	r, _, _ := procStatus.Call(
 		card.handle,
-		uintptr(unsafe.Pointer(&reader[0])),
+		uintptr(reader.ptr()),
 		uintptr(unsafe.Pointer(&readerLen)),
 		uintptr(unsafe.Pointer(&state)),
 		uintptr(unsafe.Pointer(&proto)),
@@ -315,8 +286,10 @@ func (card *Card) Status() (*CardStatus, error) {
 		return nil, Error(r)
 	}
 
+	reader = reader[:readerLen]
+
 	status := &CardStatus{
-		Reader:         syscall.UTF16ToString(reader[0:readerLen]),
+		Reader:         decodestr(reader),
 		State:          State(state),
 		ActiveProtocol: Protocol(proto),
 		Atr:            atr[0:atrLen],
@@ -431,4 +404,16 @@ func (card *Card) SetAttrib(id Attrib, data []byte) error {
 		return Error(r)
 	}
 	return nil
+}
+
+
+type strbuf []uint16
+
+func encodestr(s string) (strbuf, error) {
+	utf16, err := syscall.UTF16FromString(s)
+	return strbuf(utf16), err
+}
+
+func decodestr(buf strbuf) string {
+	return syscall.UTF16ToString(buf)
 }

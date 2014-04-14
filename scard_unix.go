@@ -77,31 +77,22 @@ func (ctx *Context) Release() error {
 	return nil
 }
 
+
 // wraps SCardListReaders
 func (ctx *Context) ListReaders() ([]string, error) {
 	var needed C.DWORD
-
 	r := C.SCardListReaders(ctx.ctx, nil, nil, &needed)
 	if Error(r) != ErrSuccess {
 		return nil, Error(r)
 	}
 
-	data := make([]byte, needed)
-	cdata := (*C.char)(unsafe.Pointer(&data[0]))
-
-	r = C.SCardListReaders(ctx.ctx, nil, cdata, &needed)
+	data := make(strbuf, needed)
+	r = C.SCardListReaders(ctx.ctx, nil, C.LPSTR(data.ptr()), &needed)
 	if Error(r) != ErrSuccess {
 		return nil, Error(r)
 	}
 
-	var readers []string
-	for _, b := range bytes.Split(data, []byte{0}) {
-		if len(b) > 0 {
-			readers = append(readers, string(b))
-		}
-	}
-
-	return readers, nil
+	return decodemstr(data), nil
 }
 
 // wraps SCardListReaderGroups
@@ -113,22 +104,14 @@ func (ctx *Context) ListReaderGroups() ([]string, error) {
 		return nil, Error(r)
 	}
 
-	data := make([]byte, needed)
-	cdata := (*C.char)(unsafe.Pointer(&data[0]))
+	data := make(strbuf, needed)
 
-	r = C.SCardListReaderGroups(ctx.ctx, cdata, &needed)
+	r = C.SCardListReaderGroups(ctx.ctx, C.LPSTR(data.ptr()), &needed)
 	if Error(r) != ErrSuccess {
 		return nil, Error(r)
 	}
 
-	var groups []string
-	for _, b := range bytes.Split(data, []byte{0}) {
-		if len(b) > 0 {
-			groups = append(groups, string(b))
-		}
-	}
-
-	return groups, nil
+	return decodemstr(data), nil
 }
 
 // wraps SCardGetStatusChange
@@ -148,8 +131,7 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 	crs := make([]C.SCARD_READERSTATE, len(readerStates))
 
 	for i := range readerStates {
-		crs[i].szReader = C.CString(readerStates[i].Reader)
-		defer C.free(unsafe.Pointer(crs[i].szReader))
+		crs[i].szReader = (*C.char)(strbuf(readerStates[i].Reader).ptr())
 		crs[i].dwCurrentState = C.DWORD(readerStates[i].CurrentState)
 		crs[i].cbAtr = C.DWORD(len(readerStates[i].Atr))
 		for j, b := range readerStates[i].Atr {
@@ -183,8 +165,7 @@ func (ctx *Context) Connect(reader string, mode ShareMode, proto Protocol) (*Car
 	var card Card
 	var activeProtocol C.DWORD
 
-	creader := C.CString(reader)
-	defer C.free(unsafe.Pointer(creader))
+	creader := (*C.char)(strbuf(reader).ptr())
 
 	r := C.SCardConnect(ctx.ctx, creader, C.DWORD(mode), C.DWORD(proto), &card.handle, &activeProtocol)
 	if Error(r) != ErrSuccess {
@@ -345,4 +326,21 @@ func (card *Card) SetAttrib(id Attrib, data []byte) error {
 	return nil
 }
 
-// SCardFreeMemory is not needed. We (hopefuly) never return buffers allocated by libpcsclite
+type strbuf []byte
+
+func encodestr(s string) (strbuf, error) {
+	buf := strbuf(s + "\x00")
+	return buf, nil
+}
+
+func decodestr(buf strbuf) string {
+	if len(buf) == 0 {
+		return ""
+	}
+
+	if buf[len(buf)-1] == 0 {
+		buf = buf[:len(buf)-1]
+	}
+
+	return string(buf)
+}
