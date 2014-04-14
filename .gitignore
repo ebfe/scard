@@ -1,4 +1,6 @@
 *~
 .*.swp
 .*.swo
+
 _obj/
+scard.test
