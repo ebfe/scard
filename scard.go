@@ -21,6 +21,15 @@ type ReaderState struct {
 	Atr          []byte
 }
 
+type Context struct {
+	ctx uintptr
+}
+
+type Card struct {
+	handle         uintptr
+	activeProtocol Protocol
+}
+
 func durationToTimeout(timeout time.Duration) uint32 {
 	switch {
 	case timeout < 0:

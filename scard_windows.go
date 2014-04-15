@@ -46,15 +46,6 @@ func init() {
 	scardIoReqT1 = dataT1Pci.Addr()
 }
 
-type Context struct {
-	ctx uintptr
-}
-
-type Card struct {
-	handle         uintptr
-	activeProtocol uintptr
-}
-
 func (e Error) Error() string {
 	err := syscall.Errno(e)
 	return fmt.Sprintf("scard: error(%x): %s", uintptr(e), err.Error())
@@ -198,7 +189,8 @@ func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Dur
 
 // wraps SCardConnect
 func (ctx *Context) Connect(reader string, mode ShareMode, proto Protocol) (*Card, error) {
-	var card Card
+	var handle uintptr
+	var activeProtocol uintptr
 
 	creader, err := encodemstr(reader)
 	if err != nil {
@@ -210,14 +202,14 @@ func (ctx *Context) Connect(reader string, mode ShareMode, proto Protocol) (*Car
 		uintptr(creader.ptr()),
 		uintptr(mode),
 		uintptr(proto),
-		uintptr(unsafe.Pointer(&card.handle)),
-		uintptr(unsafe.Pointer(&card.activeProtocol)))
+		uintptr(unsafe.Pointer(handle)),
+		uintptr(unsafe.Pointer(activeProtocol)))
 
 	if Error(r) != ErrSuccess {
 		return nil, Error(r)
 	}
 
-	return &card, nil
+	return &Card{handle: handle, activeProtocol: Protocol(activeProtocol)}, nil
 }
 
 // wraps SCardDisconnect
@@ -293,7 +285,7 @@ func (card *Card) Status() (*CardStatus, error) {
 func (card *Card) Transmit(cmd []byte) ([]byte, error) {
 	var sendpci uintptr
 
-	switch Protocol(card.activeProtocol) {
+	switch card.activeProtocol {
 	case ProtocolT0:
 		sendpci = scardIoReqT0
 	case ProtocolT1:
@@ -396,7 +388,6 @@ func (card *Card) SetAttrib(id Attrib, data []byte) error {
 	}
 	return nil
 }
-
 
 type strbuf []uint16
 
