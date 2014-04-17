@@ -10,7 +10,6 @@ package scard
 import "C"
 
 import (
-	"time"
 	"unsafe"
 )
 
@@ -56,7 +55,6 @@ func scardListReaderGroups(ctx uintptr, buf unsafe.Pointer, bufLen uint32) (uint
 	return uint32(dwBufLen), Error(r)
 }
 
-type scardReaderState C.SCARD_READERSTATE
 
 func scardGetStatusChange(ctx uintptr, timeout uint32, states []scardReaderState) Error {
 	r := C.SCardGetStatusChange(C.SCARDCONTEXT(ctx), C.DWORD(timeout), (C.LPSCARD_READERSTATE)(unsafe.Pointer(&states[0])), C.DWORD(len(states)))
@@ -153,211 +151,6 @@ func scardSetAttrib(card uintptr, id Attrib, buf []byte) Error {
 	return Error(r)
 }
 
-// wraps SCardEstablishContext
-func EstablishContext() (*Context, error) {
-	ctx, r := scardEstablishContext(C.SCARD_SCOPE_SYSTEM, 0, 0)
-	if r != ErrSuccess {
-		return nil, r
-	}
-
-	return &Context{ctx: ctx}, nil
-}
-
-// wraps SCardIsValidContext
-func (ctx *Context) IsValid() (bool, error) {
-	r := scardIsValidContext(ctx.ctx)
-	switch r {
-	case ErrSuccess:
-		return true, nil
-	case ErrInvalidHandle:
-		return false, nil
-	default:
-		return false, r
-	}
-	panic("unreachable")
-}
-
-// wraps SCardCancel
-func (ctx *Context) Cancel() error {
-	r := scardCancel(ctx.ctx)
-	if r != ErrSuccess {
-		return r
-	}
-	return nil
-}
-
-// wraps SCardReleaseContext
-func (ctx *Context) Release() error {
-	r := scardReleaseContext(ctx.ctx)
-	if r != ErrSuccess {
-		return r
-	}
-	return nil
-}
-
-// wraps SCardListReaders
-func (ctx *Context) ListReaders() ([]string, error) {
-	needed, r := scardListReaders(ctx.ctx, nil, nil, 0)
-	if r != ErrSuccess {
-		return nil, r
-	}
-
-	buf := make(strbuf, needed)
-	n, r := scardListReaders(ctx.ctx, nil, buf.ptr(), uint32(len(buf)))
-	if r != ErrSuccess {
-		return nil, r
-	}
-	return decodemstr(buf[:n]), nil
-}
-
-// wraps SCardListReaderGroups
-func (ctx *Context) ListReaderGroups() ([]string, error) {
-	needed, r := scardListReaderGroups(ctx.ctx, nil, 0)
-	if r != ErrSuccess {
-		return nil, r
-	}
-
-	buf := make(strbuf, needed)
-	n, r := scardListReaderGroups(ctx.ctx, buf.ptr(), uint32(len(buf)))
-	if r != ErrSuccess {
-		return nil, r
-	}
-	return decodemstr(buf[:n]), nil
-}
-
-// wraps SCardGetStatusChange
-func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Duration) error {
-
-	dwTimeout := durationToTimeout(timeout)
-	states := make([]scardReaderState, len(readerStates))
-
-	for i := range readerStates {
-		states[i].szReader = (*C.char)(strbuf(readerStates[i].Reader).ptr())
-		states[i].dwCurrentState = C.DWORD(readerStates[i].CurrentState)
-		states[i].cbAtr = C.DWORD(len(readerStates[i].Atr))
-		for j, b := range readerStates[i].Atr {
-			states[i].rgbAtr[j] = C.uchar(b)
-		}
-	}
-
-	r := scardGetStatusChange(ctx.ctx, dwTimeout, states)
-	if r != ErrSuccess {
-		return r
-	}
-
-	for i := range readerStates {
-		readerStates[i].EventState = StateFlag(states[i].dwEventState)
-		if states[i].cbAtr > 0 {
-			readerStates[i].Atr = make([]byte, int(states[i].cbAtr))
-			for j := C.DWORD(0); j < states[i].cbAtr; j++ {
-				readerStates[i].Atr[j] = byte(states[i].rgbAtr[j])
-			}
-		}
-	}
-
-	return nil
-}
-
-// wraps SCardConnect
-func (ctx *Context) Connect(reader string, mode ShareMode, proto Protocol) (*Card, error) {
-	creader := strbuf(reader).ptr()
-	handle, activeProtocol, r := scardConnect(ctx.ctx, creader, mode, proto)
-	if r != ErrSuccess {
-		return nil, r
-	}
-	return &Card{handle: handle, activeProtocol: activeProtocol}, nil
-}
-
-// wraps SCardDisconnect
-func (card *Card) Disconnect(d Disposition) error {
-	r := scardDisconnect(card.handle, d)
-	if r != ErrSuccess {
-		return r
-	}
-	return nil
-}
-
-// wraps SCardReconnect
-func (card *Card) Reconnect(mode ShareMode, proto Protocol, disp Disposition) error {
-	activeProtocol, r := scardReconnect(card.handle, mode, proto, disp)
-	if r != ErrSuccess {
-		return r
-	}
-	card.activeProtocol = activeProtocol
-	return nil
-}
-
-// wraps SCardBeginTransaction
-func (card *Card) BeginTransaction() error {
-	r := scardBeginTransaction(card.handle)
-	if r != ErrSuccess {
-		return r
-	}
-	return nil
-}
-
-// wraps SCardEndTransaction
-func (card *Card) EndTransaction(disp Disposition) error {
-	r := scardEndTransaction(card.handle, disp)
-	if r != ErrSuccess {
-		return r
-	}
-	return nil
-}
-
-// wraps SCardStatus
-func (card *Card) Status() (*CardStatus, error) {
-	reader, state, proto, atr, err := scardCardStatus(card.handle)
-	if err != ErrSuccess {
-		return nil, err
-	}
-	return &CardStatus{Reader: reader, State: state, ActiveProtocol: proto, Atr: atr}, nil
-}
-
-// wraps SCardTransmit
-func (card *Card) Transmit(cmd []byte) ([]byte, error) {
-	rsp := make([]byte, maxBufferSizeExtended)
-	rspLen, err := scardTransmit(card.handle, card.activeProtocol, cmd, rsp)
-	if err != ErrSuccess {
-		return nil, err
-	}
-	return rsp[:rspLen], nil
-}
-
-// wraps SCardControl
-func (card *Card) Control(ioctl uint32, in []byte) ([]byte, error) {
-	var out [0xffff]byte
-	outLen, err := scardControl(card.handle, ioctl, in, out[:])
-	if err != ErrSuccess {
-		return nil, err
-	}
-	return out[:outLen], nil
-}
-
-// wraps SCardGetAttrib
-func (card *Card) GetAttrib(id Attrib) ([]byte, error) {
-	needed, err := scardGetAttrib(card.handle, id, nil)
-	if err != ErrSuccess {
-		return nil, err
-	}
-
-	var attrib = make([]byte, needed)
-	n, err := scardGetAttrib(card.handle, id, attrib)
-	if err != ErrSuccess {
-		return nil, err
-	}
-	return attrib[:n], nil
-}
-
-// wraps SCardSetAttrib
-func (card *Card) SetAttrib(id Attrib, data []byte) error {
-	err := scardSetAttrib(card.handle, id, data)
-	if err != ErrSuccess {
-		return err
-	}
-	return nil
-}
-
 type strbuf []byte
 
 func encodestr(s string) (strbuf, error) {
@@ -375,4 +168,32 @@ func decodestr(buf strbuf) string {
 	}
 
 	return string(buf)
+}
+
+type scardReaderState C.SCARD_READERSTATE
+
+func (rs *ReaderState) toSys() (scardReaderState, error) {
+	var sys scardReaderState
+	
+	creader, err := encodestr(rs.Reader)
+	if err != nil {
+		return scardReaderState{}, err
+	}
+	sys.szReader = (*C.char)(creader.ptr())
+	sys.dwCurrentState = C.DWORD(rs.CurrentState)
+	sys.cbAtr = C.DWORD(len(rs.Atr))
+	for i, v := range rs.Atr {
+		sys.rgbAtr[i] = C.uchar(v)
+	}
+	return sys, nil
+}
+
+func (rs *ReaderState) update(sys *scardReaderState) {
+	rs.EventState = StateFlag(sys.dwEventState)
+	if sys.cbAtr > 0 {
+		rs.Atr = make([]byte, int(sys.cbAtr))
+		for i := 0; i < int(sys.cbAtr); i++ {
+			rs.Atr[i] = byte(sys.rgbAtr[i])
+		}
+	}
 }
