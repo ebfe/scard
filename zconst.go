@@ -1,5 +1,5 @@
 // Created by cgo -godefs - DO NOT EDIT
-// cgo -godefs -- -I/usr/include/PCSC const.go
+// cgo -godefs -- -I /usr/include/PCSC/ const.go
 
 package scard
 
@@ -139,6 +139,14 @@ const (
 	ResetCard   Disposition = 0x1
 	UnpowerCard Disposition = 0x2
 	EjectCard   Disposition = 0x3
+)
+
+type Scope uint32
+
+const (
+	ScopeUser     Scope = 0x0
+	ScopeTerminal Scope = 0x1
+	ScopeSystem   Scope = 0x2
 )
 
 type State uint32

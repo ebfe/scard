@@ -146,6 +146,14 @@ const (
 	EjectCard   Disposition = C.SCARD_EJECT_CARD
 )
 
+type Scope uint32
+
+const (
+	ScopeUser     Scope = C.SCARD_SCOPE_USER
+	ScopeTerminal Scope = C.SCARD_SCOPE_TERMINAL
+	ScopeSystem   Scope = C.SCARD_SCOPE_SYSTEM
+)
+
 type State uint32
 
 const (
