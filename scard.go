@@ -32,7 +32,7 @@ type Card struct {
 
 // wraps SCardEstablishContext
 func EstablishContext() (*Context, error) {
-	ctx, r := scardEstablishContext(2 /* SCOPE_SYSTEM */, 0, 0)
+	ctx, r := scardEstablishContext(ScopeSystem, 0, 0)
 	if r != ErrSuccess {
 		return nil, r
 	}

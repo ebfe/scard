@@ -50,7 +50,7 @@ func (e Error) Error() string {
 	return fmt.Sprintf("scard: error(%x): %s", uintptr(e), err.Error())
 }
 
-func scardEstablishContext(scope uint32, reserved1, reserved2 uintptr) (uintptr, Error) {
+func scardEstablishContext(scope Scope, reserved1, reserved2 uintptr) (uintptr, Error) {
 	var ctx uintptr
 	r, _, _ := procEstablishContext.Call(uintptr(scope), reserved1, reserved2, uintptr(unsafe.Pointer(&ctx)))
 	return ctx, Error(r)

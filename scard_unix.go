@@ -22,7 +22,7 @@ func Version() string {
 	return C.PCSCLITE_VERSION_NUMBER
 }
 
-func scardEstablishContext(scope uint32, reserved1, reserved2 uintptr) (uintptr, Error) {
+func scardEstablishContext(scope Scope, reserved1, reserved2 uintptr) (uintptr, Error) {
 	var ctx C.SCARDCONTEXT
 	r := C.SCardEstablishContext(C.DWORD(scope), C.LPCVOID(reserved1), C.LPCVOID(reserved2), &ctx)
 	return uintptr(ctx), Error(r)
