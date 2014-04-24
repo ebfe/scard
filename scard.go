@@ -51,7 +51,6 @@ func (ctx *Context) IsValid() (bool, error) {
 	default:
 		return false, r
 	}
-	panic("unreachable")
 }
 
 // wraps SCardCancel

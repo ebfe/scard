@@ -29,8 +29,6 @@ func waitUntilCardPresent(ctx *scard.Context, readers []string) (int, error) {
 			return -1, err
 		}
 	}
-
-	panic("unreachable")
 }
 
 func Example() {
