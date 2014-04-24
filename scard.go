@@ -235,7 +235,7 @@ func durationToTimeout(timeout time.Duration) uint32 {
 	case timeout < 0:
 		return infiniteTimeout
 	case timeout > time.Duration(infiniteTimeout)*time.Millisecond:
-		return infiniteTimeout-1
+		return infiniteTimeout - 1
 	default:
 		return uint32(timeout / time.Millisecond)
 	}

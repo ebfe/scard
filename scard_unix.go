@@ -55,7 +55,6 @@ func scardListReaderGroups(ctx uintptr, buf unsafe.Pointer, bufLen uint32) (uint
 	return uint32(dwBufLen), Error(r)
 }
 
-
 func scardGetStatusChange(ctx uintptr, timeout uint32, states []scardReaderState) Error {
 	r := C.SCardGetStatusChange(C.SCARDCONTEXT(ctx), C.DWORD(timeout), (C.LPSCARD_READERSTATE)(unsafe.Pointer(&states[0])), C.DWORD(len(states)))
 	return Error(r)
@@ -174,7 +173,7 @@ type scardReaderState C.SCARD_READERSTATE
 
 func (rs *ReaderState) toSys() (scardReaderState, error) {
 	var sys scardReaderState
-	
+
 	creader, err := encodestr(rs.Reader)
 	if err != nil {
 		return scardReaderState{}, err
