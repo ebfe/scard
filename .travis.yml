@@ -1,0 +1,7 @@
+language: go
+
+before_install:
+        - sudo apt-get install libpcsclite-dev
+
+go:
+        - 1.3
