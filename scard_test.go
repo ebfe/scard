@@ -116,6 +116,14 @@ func TestControl(t *testing.T) {
 
 	rsp, err := c.card.Control(ioctl, nil)
 	if err != nil {
+		// skip on unsupported control code errors
+		if runtime.GOOS == "windows" {
+			if err, ok := err.(Error); ok {
+				if uintptr(err) == 1 {
+					t.Skip()
+				}
+			}
+		}
 		t.Fatal(err)
 	}
 	t.Logf("rsp: % x\n", rsp)
