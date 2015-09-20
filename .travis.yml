@@ -1,8 +1,11 @@
 language: go
+sudo: false
 
-before_install:
-        - sudo apt-get install libpcsclite-dev
+addons:
+        apt:
+                packages:
+                        - libpcsclite-dev
 
 go:
-        - 1.4
+        - 1.5
         - tip
