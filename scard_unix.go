@@ -169,7 +169,14 @@ func decodestr(buf strbuf) string {
 	return string(buf)
 }
 
-type scardReaderState C.SCARD_READERSTATE
+type scardReaderState struct {
+	szReader       uintptr
+	pvUserData     uintptr
+	dwCurrentState uint32
+	dwEventState   uint32
+	cbAtr          uint32
+	rgbAtr         [33]byte
+}
 
 func (rs *ReaderState) toSys() (scardReaderState, error) {
 	var sys scardReaderState
@@ -178,11 +185,11 @@ func (rs *ReaderState) toSys() (scardReaderState, error) {
 	if err != nil {
 		return scardReaderState{}, err
 	}
-	sys.szReader = (*C.char)(creader.ptr())
-	sys.dwCurrentState = C.DWORD(rs.CurrentState)
-	sys.cbAtr = C.DWORD(len(rs.Atr))
+	sys.szReader = uintptr(creader.ptr())
+	sys.dwCurrentState = uint32(rs.CurrentState)
+	sys.cbAtr = uint32(len(rs.Atr))
 	for i, v := range rs.Atr {
-		sys.rgbAtr[i] = C.uchar(v)
+		sys.rgbAtr[i] = byte(v)
 	}
 	return sys, nil
 }
