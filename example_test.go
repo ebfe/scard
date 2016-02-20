@@ -23,6 +23,7 @@ func waitUntilCardPresent(ctx *scard.Context, readers []string) (int, error) {
 			if rs[i].EventState&scard.StatePresent != 0 {
 				return i, nil
 			}
+			rs[i].CurrentState = rs[i].EventState
 		}
 		err := ctx.GetStatusChange(rs, -1)
 		if err != nil {
