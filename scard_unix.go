@@ -178,6 +178,8 @@ type scardReaderState struct {
 	rgbAtr         [33]byte
 }
 
+var pinned = map[string]*strbuf{}
+
 func (rs *ReaderState) toSys() (scardReaderState, error) {
 	var sys scardReaderState
 
@@ -185,6 +187,7 @@ func (rs *ReaderState) toSys() (scardReaderState, error) {
 	if err != nil {
 		return scardReaderState{}, err
 	}
+	pinned[rs.Reader] = &creader
 	sys.szReader = uintptr(creader.ptr())
 	sys.dwCurrentState = uintptr(rs.CurrentState)
 	sys.cbAtr = uintptr(len(rs.Atr))
