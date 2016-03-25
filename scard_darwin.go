@@ -1,12 +1,14 @@
-// +build !windows, !darwin
+// +build darwin
 
 package scard
 
 // BUG(mg): Does not work on darwin. (older/different libpcsclite?)
 
-// #cgo pkg-config: libpcsclite
+// #cgo LDFLAGS: -framework PCSC
+// #cgo CFLAGS: -I /usr/include
 // #include <stdlib.h>
-// #include <winscard.h>
+// #include <PCSC/winscard.h>
+// #include <PCSC/wintypes.h>
 import "C"
 
 import (
@@ -14,7 +16,7 @@ import (
 )
 
 func (e Error) Error() string {
-	return "scard: " + C.GoString(C.pcsc_stringify_error(C.LONG(e)))
+	return "scard: " + C.GoString(C.pcsc_stringify_error(C.int32_t(e)))
 }
 
 // Version returns the libpcsclite version string
@@ -24,7 +26,7 @@ func Version() string {
 
 func scardEstablishContext(scope Scope, reserved1, reserved2 uintptr) (uintptr, Error) {
 	var ctx C.SCARDCONTEXT
-	r := C.SCardEstablishContext(C.DWORD(scope), C.LPCVOID(reserved1), C.LPCVOID(reserved2), &ctx)
+	r := C.SCardEstablishContext(C.uint32_t(scope), unsafe.Pointer(reserved1), unsafe.Pointer(reserved2), &ctx)
 	return uintptr(ctx), Error(r)
 }
 
@@ -44,39 +46,39 @@ func scardReleaseContext(ctx uintptr) Error {
 }
 
 func scardListReaders(ctx uintptr, groups, buf unsafe.Pointer, bufLen uint32) (uint32, Error) {
-	dwBufLen := C.DWORD(bufLen)
+	dwBufLen := C.uint32_t(bufLen)
 	r := C.SCardListReaders(C.SCARDCONTEXT(ctx), (C.LPCSTR)(groups), (C.LPSTR)(buf), &dwBufLen)
 	return uint32(dwBufLen), Error(r)
 }
 
 func scardListReaderGroups(ctx uintptr, buf unsafe.Pointer, bufLen uint32) (uint32, Error) {
-	dwBufLen := C.DWORD(bufLen)
+	dwBufLen := C.uint32_t(bufLen)
 	r := C.SCardListReaderGroups(C.SCARDCONTEXT(ctx), (C.LPSTR)(buf), &dwBufLen)
 	return uint32(dwBufLen), Error(r)
 }
 
 func scardGetStatusChange(ctx uintptr, timeout uint32, states []scardReaderState) Error {
-	r := C.SCardGetStatusChange(C.SCARDCONTEXT(ctx), C.DWORD(timeout), (C.LPSCARD_READERSTATE)(unsafe.Pointer(&states[0])), C.DWORD(len(states)))
+	r := C.SCardGetStatusChange(C.SCARDCONTEXT(ctx), C.uint32_t(timeout), (C.LPSCARD_READERSTATE_A)(unsafe.Pointer(&states[0])), C.uint32_t(len(states)))
 	return Error(r)
 }
 
 func scardConnect(ctx uintptr, reader unsafe.Pointer, shareMode ShareMode, proto Protocol) (uintptr, Protocol, Error) {
 	var handle C.SCARDHANDLE
-	var activeProto C.DWORD
+	var activeProto C.uint32_t
 
-	r := C.SCardConnect(C.SCARDCONTEXT(ctx), C.LPCSTR(reader), C.DWORD(shareMode), C.DWORD(proto), &handle, &activeProto)
+	r := C.SCardConnect(C.SCARDCONTEXT(ctx), C.LPCSTR(reader), C.uint32_t(shareMode), C.uint32_t(proto), &handle, &activeProto)
 
 	return uintptr(handle), Protocol(activeProto), Error(r)
 }
 
 func scardDisconnect(card uintptr, d Disposition) Error {
-	r := C.SCardDisconnect(C.SCARDHANDLE(card), C.DWORD(d))
+	r := C.SCardDisconnect(C.SCARDHANDLE(card), C.uint32_t(d))
 	return Error(r)
 }
 
 func scardReconnect(card uintptr, mode ShareMode, proto Protocol, disp Disposition) (Protocol, Error) {
-	var activeProtocol C.DWORD
-	r := C.SCardReconnect(C.SCARDHANDLE(card), C.DWORD(mode), C.DWORD(proto), C.DWORD(disp), &activeProtocol)
+	var activeProtocol C.uint32_t
+	r := C.SCardReconnect(C.SCARDHANDLE(card), C.uint32_t(mode), C.uint32_t(proto), C.uint32_t(disp), &activeProtocol)
 	return Protocol(activeProtocol), Error(r)
 }
 
@@ -86,18 +88,18 @@ func scardBeginTransaction(card uintptr) Error {
 }
 
 func scardEndTransaction(card uintptr, disp Disposition) Error {
-	r := C.SCardEndTransaction(C.SCARDHANDLE(card), C.DWORD(disp))
+	r := C.SCardEndTransaction(C.SCARDHANDLE(card), C.uint32_t(disp))
 	return Error(r)
 }
 
 func scardCardStatus(card uintptr) (string, State, Protocol, []byte, Error) {
 	var readerBuf [C.MAX_READERNAME + 1]byte
-	var readerLen = C.DWORD(len(readerBuf))
-	var state, proto C.DWORD
+	var readerLen = C.uint32_t(len(readerBuf))
+	var state, proto C.uint32_t
 	var atr [maxAtrSize]byte
-	var atrLen = C.DWORD(len(atr))
+	var atrLen = C.uint32_t(len(atr))
 
-	r := C.SCardStatus(C.SCARDHANDLE(card), (C.LPSTR)(unsafe.Pointer(&readerBuf[0])), &readerLen, &state, &proto, (*C.BYTE)(&atr[0]), &atrLen)
+	r := C.SCardStatus(C.SCARDHANDLE(card), (C.LPSTR)(unsafe.Pointer(&readerBuf[0])), &readerLen, &state, &proto, (*C.uchar)(&atr[0]), &atrLen)
 
 	return decodestr(readerBuf[:readerLen]), State(state), Protocol(proto), atr[:atrLen], Error(r)
 }
@@ -105,48 +107,48 @@ func scardCardStatus(card uintptr) (string, State, Protocol, []byte, Error) {
 func scardTransmit(card uintptr, proto Protocol, cmd []byte, rsp []byte) (uint32, Error) {
 	var sendpci C.SCARD_IO_REQUEST
 	var recvpci C.SCARD_IO_REQUEST
-	var rspLen = C.DWORD(len(rsp))
+	var rspLen = C.uint32_t(len(rsp))
 
 	switch proto {
 	case ProtocolT0, ProtocolT1:
-		sendpci.dwProtocol = C.ulong(proto)
+		sendpci.dwProtocol = C.uint32_t(proto)
 	default:
 		panic("unknown protocol")
 	}
 	sendpci.cbPciLength = C.sizeof_SCARD_IO_REQUEST
 
-	r := C.SCardTransmit(C.SCARDHANDLE(card), &sendpci, (*C.BYTE)(&cmd[0]), C.DWORD(len(cmd)), &recvpci, (*C.BYTE)(&rsp[0]), &rspLen)
+	r := C.SCardTransmit(C.SCARDHANDLE(card), &sendpci, (*C.uchar)(&cmd[0]), C.uint32_t(len(cmd)), &recvpci, (*C.uchar)(&rsp[0]), &rspLen)
 
 	return uint32(rspLen), Error(r)
 }
 
 func scardControl(card uintptr, ioctl uint32, in, out []byte) (uint32, Error) {
 	var ptrIn C.LPCVOID
-	var outLen = C.DWORD(len(out))
+	var outLen = C.uint32_t(len(out))
 
 	if len(in) != 0 {
 		ptrIn = C.LPCVOID(unsafe.Pointer(&in[0]))
 	}
 
-	r := C.SCardControl(C.SCARDHANDLE(card), C.DWORD(ioctl), ptrIn, C.DWORD(len(in)), (C.LPVOID)(unsafe.Pointer(&out[0])), C.DWORD(len(out)), &outLen)
+	r := C.SCardControl(C.SCARDHANDLE(card), C.uint32_t(ioctl), ptrIn, C.uint32_t(len(in)), (C.LPVOID)(unsafe.Pointer(&out[0])), C.uint32_t(len(out)), &outLen)
 	return uint32(outLen), Error(r)
 }
 
 func scardGetAttrib(card uintptr, id Attrib, buf []byte) (uint32, Error) {
-	var ptr C.LPBYTE
+	var ptr *C.uint8_t
 
 	if len(buf) != 0 {
-		ptr = C.LPBYTE(unsafe.Pointer(&buf[0]))
+		ptr = (*C.uint8_t)(&buf[0])
 	}
 
-	bufLen := C.DWORD(len(buf))
-	r := C.SCardGetAttrib(C.SCARDHANDLE(card), C.DWORD(id), ptr, &bufLen)
+	bufLen := C.uint32_t(len(buf))
+	r := C.SCardGetAttrib(C.SCARDHANDLE(card), C.uint32_t(id), ptr, &bufLen)
 
 	return uint32(bufLen), Error(r)
 }
 
 func scardSetAttrib(card uintptr, id Attrib, buf []byte) Error {
-	r := C.SCardSetAttrib(C.SCARDHANDLE(card), C.DWORD(id), (C.LPBYTE)(unsafe.Pointer(&buf[0])), C.DWORD(len(buf)))
+	r := C.SCardSetAttrib(C.SCARDHANDLE(card), C.uint32_t(id), ((*C.uint8_t)(&buf[0])), C.uint32_t(len(buf)))
 	return Error(r)
 }
 
@@ -172,9 +174,9 @@ func decodestr(buf strbuf) string {
 type scardReaderState struct {
 	szReader       uintptr
 	pvUserData     uintptr
-	dwCurrentState uintptr
-	dwEventState   uintptr
-	cbAtr          uintptr
+	dwCurrentState uint32
+	dwEventState   uint32
+	cbAtr          uint32
 	rgbAtr         [33]byte
 }
 
@@ -189,8 +191,8 @@ func (rs *ReaderState) toSys() (scardReaderState, error) {
 	}
 	pinned[rs.Reader] = &creader
 	sys.szReader = uintptr(creader.ptr())
-	sys.dwCurrentState = uintptr(rs.CurrentState)
-	sys.cbAtr = uintptr(len(rs.Atr))
+	sys.dwCurrentState = uint32(rs.CurrentState)
+	sys.cbAtr = uint32(len(rs.Atr))
 	for i, v := range rs.Atr {
 		sys.rgbAtr[i] = byte(v)
 	}
