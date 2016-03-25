@@ -2,8 +2,6 @@
 
 package scard
 
-// BUG(mg): Does not work on darwin. (older/different libpcsclite?)
-
 // #cgo LDFLAGS: -framework PCSC
 // #cgo CFLAGS: -I /usr/include
 // #include <stdlib.h>
@@ -123,14 +121,14 @@ func scardTransmit(card uintptr, proto Protocol, cmd []byte, rsp []byte) (uint32
 }
 
 func scardControl(card uintptr, ioctl uint32, in, out []byte) (uint32, Error) {
-	var ptrIn C.LPCVOID
+	var ptrIn unsafe.Pointer
 	var outLen = C.uint32_t(len(out))
 
 	if len(in) != 0 {
-		ptrIn = C.LPCVOID(unsafe.Pointer(&in[0]))
+		ptrIn = unsafe.Pointer(&in[0])
 	}
 
-	r := C.SCardControl(C.SCARDHANDLE(card), C.uint32_t(ioctl), ptrIn, C.uint32_t(len(in)), (C.LPVOID)(unsafe.Pointer(&out[0])), C.uint32_t(len(out)), &outLen)
+	r := C.SCardControl(C.SCARDHANDLE(card), C.uint32_t(ioctl), ptrIn, C.uint32_t(len(in)), unsafe.Pointer(&out[0]), C.uint32_t(len(out)), &outLen)
 	return uint32(outLen), Error(r)
 }
 
