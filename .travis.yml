@@ -6,6 +6,10 @@ addons:
                 packages:
                         - libpcsclite-dev
 
+os:
+        - linux
+        - osx
+
 go:
         - 1.5
         - 1.6
