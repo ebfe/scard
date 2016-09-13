@@ -2,8 +2,6 @@
 
 package scard
 
-// BUG(mg): Does not work on darwin. (older/different libpcsclite?)
-
 // #cgo pkg-config: libpcsclite
 // #include <stdlib.h>
 // #include <winscard.h>
