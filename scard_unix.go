@@ -144,7 +144,7 @@ func scardGetAttrib(card uintptr, id Attrib, buf []byte) (uint32, Error) {
 }
 
 func scardSetAttrib(card uintptr, id Attrib, buf []byte) Error {
-	r := C.SCardSetAttrib(C.SCARDHANDLE(card), C.DWORD(id), (C.LPBYTE)(unsafe.Pointer(&buf[0])), C.DWORD(len(buf)))
+	r := C.SCardSetAttrib(C.SCARDHANDLE(card), C.DWORD(id), (*C.BYTE)(unsafe.Pointer(&buf[0])), C.DWORD(len(buf)))
 	return Error(r)
 }
 
