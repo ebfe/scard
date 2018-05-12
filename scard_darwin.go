@@ -90,8 +90,9 @@ func scardEndTransaction(card uintptr, disp Disposition) Error {
 	return Error(r)
 }
 
+const MAX_READERNAME = 128
 func scardCardStatus(card uintptr) (string, State, Protocol, []byte, Error) {
-	var readerBuf [C.MAX_READERNAME + 1]byte
+	var readerBuf [MAX_READERNAME + 1]byte
 	var readerLen = C.uint32_t(len(readerBuf))
 	var state, proto C.uint32_t
 	var atr [maxAtrSize]byte
