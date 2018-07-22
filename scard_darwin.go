@@ -101,16 +101,14 @@ func scardEndTransaction(card uintptr, disp Disposition) Error {
 	return Error(r)
 }
 
-func scardCardStatus(card uintptr) (string, State, Protocol, []byte, Error) {
-	var readerBuf [C.MAX_READERNAME + 1]byte
+func scardCardStatus(card uintptr, readerBuf []byte, atrBuf []byte) (uint32, State, Protocol, uint32, Error) {
 	var readerLen = C.uint32_t(len(readerBuf))
 	var state, proto C.uint32_t
-	var atr [maxAtrSize]byte
-	var atrLen = C.uint32_t(len(atr))
+	var atrLen = C.uint32_t(len(atrBuf))
 
-	r := C.SCardStatus(C.SCARDHANDLE(card), (C.LPSTR)(unsafe.Pointer(&readerBuf[0])), &readerLen, &state, &proto, (*C.uchar)(&atr[0]), &atrLen)
+	r := C.SCardStatus(C.SCARDHANDLE(card), (C.LPSTR)(unsafe.Pointer(&readerBuf[0])), &readerLen, &state, &proto, (*C.uchar)(&atrBuf[0]), &atrLen)
 
-	return decodestr(readerBuf[:readerLen]), State(state), Protocol(proto), atr[:atrLen], Error(r)
+	return uint32(readerLen), State(state), Protocol(proto), uint32(atrLen), Error(r)
 }
 
 func scardTransmit(card uintptr, proto Protocol, cmd []byte, rsp []byte) (uint32, Error) {
