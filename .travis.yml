@@ -15,3 +15,19 @@ go:
         - 1.9.x
         - 1.10.x
           #        - tip
+
+env:
+        -
+        - GIMME_OS=windows
+
+matrix:
+        exclude:
+                - os: osx
+                  env: GIMME_OS=windows
+
+script:
+        - go build -v ./...
+        - |
+                if [ "$GOOS" != windows ]; then
+                        go test -v ./...;
+                fi
