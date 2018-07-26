@@ -124,7 +124,7 @@ func scardCardStatus(card uintptr, readerBuf []byte, atrBuf []byte) (uint32, Sta
 
 	readerLen := uint32(len(readerBuf))
 
-	r, _, _ := procStatus.Call(card, uintptr(reader.ptr()), uintptr(unsafe.Pointer(&readerLen)), uintptr(unsafe.Pointer(&state)), uintptr(unsafe.Pointer(&proto)), uintptr(unsafe.Pointer(&atr[0])), uintptr(unsafe.Pointer(&atrLen)))
+	r, _, _ := procStatus.Call(card, uintptr(unsafe.Pointer(&readerBuf[0])), uintptr(unsafe.Pointer(&readerLen)), uintptr(unsafe.Pointer(&state)), uintptr(unsafe.Pointer(&proto)), uintptr(unsafe.Pointer(&atrBuf[0])), uintptr(unsafe.Pointer(&atrLen)))
 
 	return readerLen, State(state), Protocol(proto), atrLen, Error(r)
 }

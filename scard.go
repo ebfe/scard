@@ -198,7 +198,11 @@ func (card *Card) Status() (*CardStatus, error) {
 		return nil, err
 	}
 
-	reader := decodemstr(strbuf(readerBuf[:readerLen]))
+	sb, e := encodestr(string(readerBuf[:readerLen]))
+	if e != nil {
+		return nil, err
+	}
+	reader := decodemstr(strbuf(sb))
 
 	return &CardStatus{Reader: reader[0], State: state, ActiveProtocol: proto, Atr: atrBuf[:atrLen]}, nil
 }
