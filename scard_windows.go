@@ -118,13 +118,13 @@ func scardEndTransaction(card uintptr, disp Disposition) Error {
 	return Error(r)
 }
 
-func scardCardStatus(card uintptr, readerBuf []byte, atrBuf []byte) (uint32, State, Protocol, uint32, Error) {
+func scardCardStatus(card uintptr, readerBuf strbuf, atrBuf []byte) (uint32, State, Protocol, uint32, Error) {
 	var state, proto uint32
 	var atrLen = uint32(len(atrBuf))
 
 	readerLen := uint32(len(readerBuf))
 
-	r, _, _ := procStatus.Call(card, uintptr(reader.ptr()), uintptr(unsafe.Pointer(&readerLen)), uintptr(unsafe.Pointer(&state)), uintptr(unsafe.Pointer(&proto)), uintptr(unsafe.Pointer(&atr[0])), uintptr(unsafe.Pointer(&atrLen)))
+	r, _, _ := procStatus.Call(card, uintptr(readerBuf.ptr()), uintptr(unsafe.Pointer(&readerLen)), uintptr(unsafe.Pointer(&state)), uintptr(unsafe.Pointer(&proto)), uintptr(unsafe.Pointer(&atrBuf[0])), uintptr(unsafe.Pointer(&atrLen)))
 
 	return readerLen, State(state), Protocol(proto), atrLen, Error(r)
 }

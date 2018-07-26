@@ -180,25 +180,25 @@ func (card *Card) EndTransaction(disp Disposition) error {
 // wraps SCardStatus
 func (card *Card) Status() (*CardStatus, error) {
 
-	var readerBuf = make([]byte, maxReadername+1)
+	var readerBuf = make(strbuf, maxReadername+1)
 	var atrBuf = make([]byte, maxAtrSize)
 
-	readerLen, state, proto, atrLen, err := scardCardStatus(card.handle, readerBuf[:], atrBuf[:])
+	readerLen, state, proto, atrLen, err := scardCardStatus(card.handle, readerBuf, atrBuf)
 	if err == ErrInsufficientBuffer {
 		if uint32(len(readerBuf)) < readerLen {
-			readerBuf = make([]byte, readerLen)
+			readerBuf = make(strbuf, readerLen)
 		}
 		if uint32(len(atrBuf)) < atrLen {
 			atrBuf = make([]byte, atrLen)
 		}
-		readerLen, state, proto, atrLen, err = scardCardStatus(card.handle, readerBuf[:], atrBuf[:])
+		readerLen, state, proto, atrLen, err = scardCardStatus(card.handle, readerBuf, atrBuf)
 	}
 
 	if err != ErrSuccess {
 		return nil, err
 	}
 
-	reader := decodemstr(strbuf(readerBuf[:readerLen]))
+	reader := decodemstr(readerBuf[:readerLen])
 
 	return &CardStatus{Reader: reader[0], State: state, ActiveProtocol: proto, Atr: atrBuf[:atrLen]}, nil
 }

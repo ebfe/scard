@@ -101,7 +101,7 @@ func scardEndTransaction(card uintptr, disp Disposition) Error {
 	return Error(r)
 }
 
-func scardCardStatus(card uintptr, readerBuf []byte, atrBuf []byte) (uint32, State, Protocol, uint32, Error) {
+func scardCardStatus(card uintptr, readerBuf strbuf, atrBuf []byte) (uint32, State, Protocol, uint32, Error) {
 	var readerLen = C.uint32_t(len(readerBuf))
 	var state, proto C.uint32_t
 	var atrLen = C.uint32_t(len(atrBuf))
