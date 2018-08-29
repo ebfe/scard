@@ -5,6 +5,11 @@ package scard
 // #cgo pkg-config: libpcsclite
 // #include <stdlib.h>
 // #include <winscard.h>
+//
+// LONG wrapSCardGetStatusChange(SCARDCONTEXT ctx, DWORD timeout, SCARD_READERSTATE *states, DWORD nstates) {
+// 	return SCardGetStatusChange(ctx, timeout, states, nstates);
+// }
+//
 import "C"
 
 import (
@@ -54,7 +59,7 @@ func scardListReaderGroups(ctx uintptr, buf unsafe.Pointer, bufLen uint32) (uint
 }
 
 func scardGetStatusChange(ctx uintptr, timeout uint32, states []scardReaderState) Error {
-	r := C.SCardGetStatusChange(C.SCARDCONTEXT(ctx), C.DWORD(timeout), (C.LPSCARD_READERSTATE)(unsafe.Pointer(&states[0])), C.DWORD(len(states)))
+	r := C.wrapSCardGetStatusChange(C.SCARDCONTEXT(ctx), C.DWORD(timeout), (*C.SCARD_READERSTATE)(unsafe.Pointer(&states[0])), C.DWORD(len(states)))
 	return Error(r)
 }
 
