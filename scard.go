@@ -140,6 +140,11 @@ func (ctx *Context) Connect(reader string, mode ShareMode, proto Protocol) (*Car
 	return &Card{handle: handle, activeProtocol: activeProtocol}, nil
 }
 
+// the protocol being used
+func (card *Card) ActiveProtocol() Protocol {
+	return card.activeProtocol
+}
+
 // wraps SCardDisconnect
 func (card *Card) Disconnect(d Disposition) error {
 	r := scardDisconnect(card.handle, d)
