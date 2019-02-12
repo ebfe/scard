@@ -3,7 +3,6 @@
 package scard
 
 // #cgo LDFLAGS: -framework PCSC
-// #cgo CFLAGS: -I /usr/include
 // #include <stdlib.h>
 // #include <PCSC/winscard.h>
 // #include <PCSC/wintypes.h>
@@ -61,11 +60,11 @@ func scardGetStatusChange(ctx uintptr, timeout uint32, states []scardReaderState
 	// and 64 bits), so we pack an array manually instead.
 	const size = int(unsafe.Sizeof(states[0])) - 3
 	buf := make([]byte, size*len(states))
-	for i, _ := range states {
+	for i := range states {
 		copy(buf[i*size:(i+1)*size], (*(*[size]byte)(unsafe.Pointer(&states[i])))[:])
 	}
 	r := C.SCardGetStatusChange(C.SCARDCONTEXT(ctx), C.uint32_t(timeout), (C.LPSCARD_READERSTATE_A)(unsafe.Pointer(&buf[0])), C.uint32_t(len(states)))
-	for i, _ := range states {
+	for i := range states {
 		copy((*(*[size]byte)(unsafe.Pointer(&states[i])))[:], buf[i*size:(i+1)*size])
 	}
 	return Error(r)
