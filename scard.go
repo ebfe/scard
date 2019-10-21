@@ -103,7 +103,6 @@ func (ctx *Context) ListReaderGroups() ([]string, error) {
 
 // wraps SCardGetStatusChange
 func (ctx *Context) GetStatusChange(readerStates []ReaderState, timeout time.Duration) error {
-
 	dwTimeout := durationToTimeout(timeout)
 	states := make([]scardReaderState, len(readerStates))
 
@@ -184,7 +183,6 @@ func (card *Card) EndTransaction(disp Disposition) error {
 
 // wraps SCardStatus
 func (card *Card) Status() (*CardStatus, error) {
-
 	var readerBuf = make(strbuf, maxReadername+1)
 	var atrBuf = make([]byte, maxAtrSize)
 
