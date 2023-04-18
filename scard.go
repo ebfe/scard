@@ -218,6 +218,11 @@ func (card *Card) Transmit(cmd []byte) ([]byte, error) {
 	return rsp[:rspLen], nil
 }
 
+// C macro SCARD_CTL_CODE() equivalent to Compute IOCTL codes to be used with Control()
+func CtlCode(code uint16) uint32 {
+	return 0x42000000 + uint32(code)
+}
+
 // wraps SCardControl
 func (card *Card) Control(ioctl uint32, in []byte) ([]byte, error) {
 	var out [0xffff]byte
