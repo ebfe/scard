@@ -220,7 +220,7 @@ func (card *Card) Transmit(cmd []byte) ([]byte, error) {
 
 // C macro SCARD_CTL_CODE() equivalent to Compute IOCTL codes to be used with Control()
 func CtlCode(code uint16) uint32 {
-	return 0x42000000 + uint32(code)
+	return scardCtlCode(code)
 }
 
 // wraps SCardControl
