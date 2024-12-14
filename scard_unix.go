@@ -14,6 +14,7 @@ package scard
 import "C"
 
 import (
+	"sync"
 	"unsafe"
 )
 
@@ -185,6 +186,7 @@ type scardReaderState struct {
 }
 
 var pinned = map[string]*strbuf{}
+var mutex sync.Mutex
 
 func (rs *ReaderState) toSys() (scardReaderState, error) {
 	var sys scardReaderState
@@ -193,7 +195,11 @@ func (rs *ReaderState) toSys() (scardReaderState, error) {
 	if err != nil {
 		return scardReaderState{}, err
 	}
+
+	mutex.Lock()
 	pinned[rs.Reader] = &creader
+	mutex.Unlock()
+
 	sys.szReader = uintptr(creader.ptr())
 	sys.dwCurrentState = uintptr(rs.CurrentState)
 	sys.cbAtr = uintptr(len(rs.Atr))
